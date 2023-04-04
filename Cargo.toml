@@ -1,4 +1,5 @@
 [workspace]
 members = [
-    "halo2-circuits"
+    "halo2-circuits",
+    "proving-server"
 ]

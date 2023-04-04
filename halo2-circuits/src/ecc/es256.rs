@@ -1,3 +1,4 @@
+// TODO: Fix SHA
 #![allow(non_snake_case)]
 use ark_std::{end_timer, start_timer};
 use halo2_base::{utils::PrimeField, SKIP_FIRST_PASS};

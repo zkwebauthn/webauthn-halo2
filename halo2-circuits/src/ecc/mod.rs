@@ -1,2 +1,2 @@
-mod ecdsa_p256;
+pub mod ecdsa_p256;
 // mod es256;

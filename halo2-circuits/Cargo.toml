@@ -1,14 +1,18 @@
 [package]
-name = "halo2-webauthn"
+name = "halo2-circuits"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "halo2_circuits"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 halo2-base = { branch = "main", default-features = false, features = ["halo2-pse", "display"], git = "https://github.com/rrrliu/halo2-lib.git" }
 halo2-ecc = { branch = "main", default-features = false, features = ["halo2-pse", "display"], git = "https://github.com/rrrliu/halo2-lib.git" }
-halo2-dynamic-sha256 = { git = "https://github.com/zkemail/halo2-dynamic-sha256.git", version = "0.1.0", branch = "main" }
+# Add back once rust toolchain issues are fixed
+# halo2-dynamic-sha256 = { git = "https://github.com/zkemail/halo2-dynamic-sha256.git", version = "0.1.0", branch = "main" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rand_core = { version = "0.6", default-features = false, features = ["getrandom"] }

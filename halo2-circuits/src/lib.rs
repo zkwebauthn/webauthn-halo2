@@ -1,1 +1,1 @@
-mod ecc;
+pub mod ecc;

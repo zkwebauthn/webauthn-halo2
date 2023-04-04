@@ -1,12 +1,17 @@
 #![allow(non_snake_case)]
 use ark_std::{end_timer, start_timer};
+use halo2_base::halo2_proofs::halo2curves::group::GroupEncoding;
+use halo2_base::halo2_proofs::halo2curves::secp256k1::Secp256k1Compressed;
+use halo2_base::halo2_proofs::halo2curves::serde::SerdeObject;
 use halo2_base::{utils::PrimeField, SKIP_FIRST_PASS};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
+use std::io::BufReader;
 use std::marker::PhantomData;
 use std::{env::var, io::Write};
 
 use halo2_base::halo2_proofs::{
+    SerdeFormat,
     arithmetic::CurveAffine,
     circuit::{Value, Layouter, SimpleFloorPlanner},
     dev::MockProver,
@@ -23,6 +28,7 @@ use halo2_ecc::{
     fields::{fp::{FpStrategy, FpConfig}, FieldChip},
 };
 use halo2_base::utils::{biguint_to_fe, fe_to_biguint, modulus};
+use halo2_base::utils::fs::gen_srs;
 
 type FpChip<F> = FpConfig<F, Fp>;
 
@@ -221,6 +227,116 @@ fn test_secp256r1_ecdsa() {
     let prover = MockProver::run(K, &circuit, vec![]).unwrap();
     //prover.assert_satisfied();
     assert_eq!(prover.verify(), Ok(()));
+}
+
+// fn generate_keys<F>() -> Result<(ProvingKey<F>, VerifyingKey<F>)> {
+//     let vk = keygen_vk(&params, &circuit)?;
+//     let pk = keygen_pk(&params, vk, &circuit)?;
+//     Ok((pk, vk))
+// }
+
+pub fn download_keys(degree: u32, proving_key_path: Option<&str>, verifying_key_path: Option<&str>) -> Result<(), Error> {
+    let circuit = ECDSACircuit::<Fr>::default();
+    let params = gen_srs(degree);
+    let vk = keygen_vk(&params, &circuit)?;
+    let pk = keygen_pk(&params, vk.clone(), &circuit)?;
+    proving_key_path.map(|path| {
+        let mut file = File::create(path).expect("Unable to create proving key file");
+        let pk_bytes = pk.to_bytes(SerdeFormat::RawBytes);
+        file.write_all(&pk_bytes).unwrap()
+    });
+    verifying_key_path.map(|path| {
+        let mut file = File::create(path).expect("Unable to create verifying key file");
+        let vk_bytes = vk.to_bytes(SerdeFormat::RawBytes);
+        file.write_all(&vk_bytes).unwrap()
+    });
+    Ok(())
+}
+
+pub fn generate_proof(pubkey: &[u8; 64], r: &[u8; 32], s: &[u8; 32], msghash: &[u8; 32], proving_key_path: &str, degree: u32) -> Result<Vec<u8>, Error> {
+    use halo2_base::halo2_proofs::{
+        poly::kzg::{
+            commitment::KZGCommitmentScheme,
+            multiopen::{ProverSHPLONK, VerifierSHPLONK},
+            strategy::SingleStrategy,
+        },
+        transcript::{TranscriptReadBuffer, TranscriptWriterBuffer},
+    };
+    let params = gen_srs(degree);
+    let proving_key = {
+        let f = File::open(proving_key_path).expect("Unable to open proving key file");
+        let mut reader = BufReader::new(f);
+        ProvingKey::<G1Affine>::read::<_, ECDSACircuit<Fr>>(&mut reader, SerdeFormat::RawBytes)
+
+    }?;
+    println!("1");
+    //start paste
+    let G = Secp256r1Affine::generator();
+        // let sk = <Secp256r1Affine as CurveAffine>::ScalarExt::random(OsRng);
+        let sk = <Secp256r1Affine as CurveAffine>::ScalarExt::from(10);
+        let pubkey = Secp256r1Affine::from(G * sk);
+        // let msg_hash = <Secp256r1Affine as CurveAffine>::ScalarExt::random(OsRng);
+        let msg_hash = <Secp256r1Affine as CurveAffine>::ScalarExt::from(10);
+
+        // let k = <Secp256r1Affine as CurveAffine>::ScalarExt::random(OsRng);
+        let k = <Secp256r1Affine as CurveAffine>::ScalarExt::from(10);
+        let k_inv = k.invert().unwrap();
+
+        let r_point = Secp256r1Affine::from(G * k).coordinates().unwrap();
+        let x = r_point.x();
+        let x_bigint = fe_to_biguint(x);
+        let r = biguint_to_fe::<Fq>(&x_bigint);
+        let s = k_inv * (msg_hash + (r * sk));
+
+        let proof_circuit = ECDSACircuit::<Fr> {
+            r: Some(r),
+            s: Some(s),
+            msghash: Some(msg_hash),
+            pk: Some(pubkey),
+            G,
+            _marker: PhantomData,
+        };
+        // end paste
+
+    // let G = Secp256r1Affine::generator();
+    // let pubkey_point = Secp256r1Affine::from_raw_bytes(pubkey).into();
+    // let msghash  = Fq::from_bytes(msghash).into();
+
+    // let r_point = Fq::from_bytes(r).into();
+    // let s_point = Fq::from_bytes(s).into();
+    // println!("2");
+    // println!("G: {:?}", G);
+    // println!("pubkey: {:?}", pubkey);
+    // println!("r: {:?}", r);
+    // println!("s: {:?}", s);
+
+    // let proof_circuit = ECDSACircuit::<Fr> {
+    //     r: r_point,
+    //     s: s_point,
+    //     msghash,
+    //     pk: pubkey_point,
+    //     G,
+    //     _marker: PhantomData,
+    // };
+    // println!("3");
+    // println!("{:?}", params);
+    let mut rng = OsRng;
+
+    // create a proof
+    let mut transcript = Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
+    println!("4");
+    create_proof::<
+        KZGCommitmentScheme<Bn256>,
+        ProverSHPLONK<'_, Bn256>,
+        Challenge255<G1Affine>,
+        _,
+        Blake2bWrite<Vec<u8>, G1Affine, Challenge255<G1Affine>>,
+        ECDSACircuit<Fr>,
+    >(&params, &proving_key, &[proof_circuit], &[&[]], &mut rng, &mut transcript)?;
+    println!("5");
+
+    let proof = transcript.finalize();
+    Ok (proof)
 }
 
 #[cfg(test)]

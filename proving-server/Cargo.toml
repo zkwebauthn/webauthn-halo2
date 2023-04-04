@@ -1,0 +1,19 @@
+[package]
+name = "proving-server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rocket = { version = "0.4.11" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+halo2-circuits = { path = "../halo2-circuits" }
+hex = "0.4.3"
+rocket_cors = "0.5.2"
+
+[dependencies.rocket_contrib]
+version = "0.4.10"
+default-features = false
+features = ["json"]
