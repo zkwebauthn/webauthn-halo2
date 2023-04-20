@@ -21,7 +21,7 @@ fn index() -> &'static str {
 
 #[get("/setup")]
 fn setup() -> &'static str {
-    download_keys(17, Some("./proving_key"), Some("./verifying_key"));
+    download_keys(17, Some("./proving_key.pk"), Some("./verifying_key.vk"));
     "Done"
 }
 
