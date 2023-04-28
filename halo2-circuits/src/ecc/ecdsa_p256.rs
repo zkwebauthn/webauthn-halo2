@@ -262,64 +262,21 @@ pub fn generate_proof(pubkey_x: &[u8; 32], pubkey_y: &[u8; 32], r: &[u8; 32], s:
         transcript::{TranscriptReadBuffer, TranscriptWriterBuffer},
     };
     let params = gen_srs(degree);
-    println!("0");
     let proving_key = {
         let f = File::open(proving_key_path).expect("Unable to open proving key file");
         let mut reader = BufReader::new(f);
         ProvingKey::<G1Affine>::read::<_, ECDSACircuit<Fr>>(&mut reader, SerdeFormat::RawBytes)
 
     }?;
-    println!("1");
-    //start paste
-    // let G = Secp256r1Affine::generator();
-    // // let sk = <Secp256r1Affine as CurveAffine>::ScalarExt::random(OsRng);
-    // let sk = <Secp256r1Affine as CurveAffine>::ScalarExt::from(10);
-    // let pubkey = Secp256r1Affine::from(G * sk);
-    // let msg_hash = <Secp256r1Affine as CurveAffine>::ScalarExt::random(OsRng);
-
-    // let k = <Secp256r1Affine as CurveAffine>::ScalarExt::random(OsRng);
-    // let k_inv = k.invert().unwrap();
-
-    // let r_point = Secp256r1Affine::from(G * k).coordinates().unwrap();
-    // let x = r_point.x();
-    // let x_bigint = fe_to_biguint(x);
-    // let r = biguint_to_fe::<Fq>(&x_bigint);
-    // let s = k_inv * (msg_hash + (r * sk));
-
-    // let proof_circuit = ECDSACircuit::<Fr> {
-    //     r: Some(r),
-    //     s: Some(s),
-    //     msghash: Some(msg_hash),
-    //     pk: Some(pubkey),
-    //     G,
-    //     _marker: PhantomData,
-    // };
-    // end paste
 
     let G = Secp256r1Affine::generator();
-    println!("raw_inputs:");
-    println!("pubkey_x: {:?}", pubkey_x);
-    println!("pubkey_y: {:?}", pubkey_y);
-    println!("msg_hash: {:?}", msg_hash);
-    println!("r: {:?}", r);
-    println!("s: {:?}", s);
-    
-    // Fp::from_bytes(bytes);
     let pubkey_x_base = Fp::from_bytes(pubkey_x).unwrap();
     let pubkey_y_base = Fp::from_bytes(pubkey_y).unwrap();
     let pubkey_point = Secp256r1Affine::from_xy(pubkey_x_base, pubkey_y_base).into();
     let msghash = <Secp256r1Affine as CurveAffine>::ScalarExt::from_bytes(msg_hash).into();
-    // let msghash  = Fq::from_bytes(msg_hash).into();
 
     let r_point = <Secp256r1Affine as CurveAffine>::ScalarExt::from_bytes(r).into();
     let s_point = <Secp256r1Affine as CurveAffine>::ScalarExt::from_bytes(s).into();
-
-    println!("generated_points:");
-    println!("pubkey_point: {:?}", pubkey_point);
-    println!("msghash: {:?}", msghash);
-    println!("r_point: {:?}", r_point);
-    println!("s_point: {:?}", s_point);
-    println!("Fpsize: {:?}", Fp::size());
 
     let proof_circuit = ECDSACircuit::<Fr> {
         r: r_point,
@@ -329,13 +286,10 @@ pub fn generate_proof(pubkey_x: &[u8; 32], pubkey_y: &[u8; 32], r: &[u8; 32], s:
         G,
         _marker: PhantomData,
     };
-    println!("3");
-    // println!("{:?}", params);
     let mut rng = OsRng;
 
     // create a proof
     let mut transcript = Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
-    println!("4");
     create_proof::<
         KZGCommitmentScheme<Bn256>,
         ProverSHPLONK<'_, Bn256>,
@@ -344,7 +298,6 @@ pub fn generate_proof(pubkey_x: &[u8; 32], pubkey_y: &[u8; 32], r: &[u8; 32], s:
         Blake2bWrite<Vec<u8>, G1Affine, Challenge255<G1Affine>>,
         ECDSACircuit<Fr>,
     >(&params, &proving_key, &[proof_circuit], &[&[]], &mut rng, &mut transcript)?;
-    println!("5");
 
     let proof = transcript.finalize();
     Ok (proof)

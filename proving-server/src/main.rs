@@ -44,9 +44,6 @@ struct ProveRequestBody {
 
 #[post("/prove", format = "application/json", data = "<request_body>")]
 fn prove(request_body: Json<ProveRequestBody>) -> Result<String, FromHexError> {
-    println!("proving_key_path: {}", request_body.proving_key_path);
-    // let pubkey = concat_arrays(request_body.pubkey_x, request_body.pubkey_y);
-    println!("Before generate proof");
     let proof = generate_proof(&request_body.pubkey_x, &request_body.pubkey_y, &request_body.r, &request_body.s, &request_body.msghash, &request_body.proving_key_path, 17).unwrap();
     let proof_hex = hex::encode(proof);
     println!("{}", proof_hex);
