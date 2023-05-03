@@ -18,7 +18,7 @@ use halo2_base::halo2_proofs::{
     transcript::{Blake2bRead, Blake2bWrite, Challenge255},
 };
 use rand_core::OsRng;
-use halo2_dynamic_sha256::{Field, Sha256CompressionConfig, Sha256DynamicConfig};
+use halo2_dynamic_sha256::{Sha256DynamicConfig};
 
 use halo2_ecc::{
     ecc::{ecdsa::ecdsa_verify_no_pubkey_check, EccChip},
@@ -38,12 +38,13 @@ struct CircuitParams {
     lookup_bits: usize,
     limb_bits: usize,
     num_limbs: usize,
+    sha256_config: Sha256DynamicConfig<Fp>
 }
 
 pub struct ES256Circuit<F> {
     pub r: Option<Fq>,
     pub s: Option<Fq>,
-    pub msg: Option<Vec<u8>>,
+    pub msg: Option<Fq>,
     pub pk: Option<Secp256r1Affine>,
     pub G: Secp256r1Affine,
     pub _marker: PhantomData<F>,
@@ -129,7 +130,8 @@ impl<F: PrimeField> Circuit<F> for ES256Circuit<F> {
                     let m_assigned = fq_chip.load_private(
                         ctx,
                         FpConfig::<F, Fq>::fe_to_witness(
-                            &self.msghash.map_or(Value::unknown(), Value::known),
+                            // need to hash
+                            &self.msg.map_or(Value::unknown(), Value::known),
                         ),
                     );
 
