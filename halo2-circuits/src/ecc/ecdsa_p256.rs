@@ -2,11 +2,20 @@
 use ark_std::{end_timer, start_timer};
 use halo2_base::halo2_proofs::halo2curves::group::GroupEncoding;
 use halo2_base::halo2_proofs::halo2curves::serde::SerdeObject;
+use halo2_base::halo2_proofs::plonk::VerifyingKey;
 use halo2_base::{utils::PrimeField, SKIP_FIRST_PASS};
 use serde::{Deserialize, Serialize};
+use snark_verifier::loader::evm::{EvmLoader, self};
+use snark_verifier::pcs::kzg::{KzgAs, Gwc19, KzgDecidingKey};
+use snark_verifier::system::halo2::transcript::evm::EvmTranscript;
+use snark_verifier::system::halo2::{compile, Config};
+use snark_verifier::verifier::{self, SnarkVerifier};
+use std::error;
+// use snark_verifier::verifier::plonk::PlonkVerifier;
 use std::fs::File;
 use std::io::BufReader;
 use std::marker::PhantomData;
+use std::rc::Rc;
 use std::{env::var, io::Write};
 
 use halo2_base::halo2_proofs::{
@@ -16,7 +25,7 @@ use halo2_base::halo2_proofs::{
     dev::MockProver,
     halo2curves::bn256::{Bn256, Fr, G1Affine},
     halo2curves::secp256r1::{Fp, Fq, Secp256r1Affine},
-    plonk::*,
+    plonk::{Circuit, ConstraintSystem, create_proof, Error, ProvingKey, keygen_pk, keygen_vk},
     poly::commitment::ParamsProver,
     transcript::{Blake2bRead, Blake2bWrite, Challenge255},
 };
@@ -252,6 +261,40 @@ pub fn download_keys(degree: u32, proving_key_path: Option<&str>, verifying_key_
     Ok(())
 }
 
+
+pub fn generate_verifier(verifying_key_path: &str, degree: u32) -> Result<(Vec<u8>, String), Error> {
+    type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
+    // Hm
+    let num_instance = vec![];
+
+    let params = gen_srs(degree);
+    let vk = {
+        let f = File::open(verifying_key_path).expect("Unable to open verifying key file");
+        let mut reader = BufReader::new(f);
+        // VerifyingKey::<<KZGCommitmentScheme<Bn256> as CommitmentScheme>::Curve>::read::<_, ECDSACircuit<Fr>>(&mut reader, RawBytes)
+        VerifyingKey::<G1Affine>::read::<_, ECDSACircuit<Fr>>(&mut reader, SerdeFormat::RawBytes)
+    }?;
+    let protocol = compile(
+        &params,
+        &vk,
+        Config::kzg().with_num_instance(num_instance.clone())
+    );
+    let vk_kzg: KzgDecidingKey<Bn256> = (params.get_g()[0], params.g2(), params.s_g2()).into();
+
+
+    let loader = EvmLoader::new::<Fq, Fr>();
+    let protocol = protocol.loaded(&loader);
+    let mut transcript = EvmTranscript::<G1Affine, Rc<EvmLoader>, _, _>::new(&loader);
+    
+    let instances = transcript.load_instances(num_instance);
+    let proof = PlonkVerifier::read_proof(&vk_kzg, &protocol, &instances, &mut transcript).unwrap();
+    PlonkVerifier::verify(&vk_kzg, &protocol, &instances, &proof).unwrap();
+
+    let yul_code = &loader.yul_code();
+
+    Ok((evm::compile_yul(yul_code), yul_code.clone()))
+}
+
 pub fn generate_proof(pubkey_x: &[u8; 32], pubkey_y: &[u8; 32], r: &[u8; 32], s: &[u8; 32], msg_hash: &[u8; 32], proving_key_path: &str, degree: u32) -> Result<Vec<u8>, Error> {
     use halo2_base::halo2_proofs::{
         poly::kzg::{
@@ -266,7 +309,6 @@ pub fn generate_proof(pubkey_x: &[u8; 32], pubkey_y: &[u8; 32], r: &[u8; 32], s:
         let f = File::open(proving_key_path).expect("Unable to open proving key file");
         let mut reader = BufReader::new(f);
         ProvingKey::<G1Affine>::read::<_, ECDSACircuit<Fr>>(&mut reader, SerdeFormat::RawBytes)
-
     }?;
 
     let G = Secp256r1Affine::generator();
