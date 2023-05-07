@@ -12,6 +12,7 @@ serde_json = "1.0"
 halo2-circuits = { path = "../halo2-circuits" }
 hex = "0.4.3"
 rocket_cors = "0.5.2"
+regex = "1.8.1"
 
 [dependencies.rocket_contrib]
 version = "0.4.10"
