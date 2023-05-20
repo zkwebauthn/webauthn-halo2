@@ -2,7 +2,7 @@
 
 use std::{error::Error, path::PathBuf, fs::File};
 
-use halo2_circuits::ecc::ecdsa_p256::{download_keys, generate_proof, generate_verifier};
+use halo2_circuits::ecc::ecdsa_p256::{download_keys, generate_proof, generate_verifier, verify, generate_proof_evm, verify_evm};
 use std::io::Write;
 use rocket::http::Method;
 use rocket_contrib::json::Json;
@@ -24,7 +24,7 @@ fn index() -> &'static str {
 
 #[get("/setup")]
 fn setup() -> &'static str {
-    download_keys(DEGREE, Some("./proving_key.pk"), Some("./verifying_key.vk"));
+    download_keys(DEGREE, Some("./keys/proving_key.pk"), Some("./keys/verifying_key.vk"));
     "Done"
 }
 
@@ -43,6 +43,14 @@ struct ProveRequestBody {
     pubkey_y: [u8; 32],
     msghash: [u8; 32],
     proving_key_path: String,
+}
+
+#[post("/prove_evm", format = "application/json", data = "<request_body>")]
+fn prove_evm(request_body: Json<ProveRequestBody>) -> Result<String, FromHexError> {
+    let proof = generate_proof_evm(&request_body.pubkey_x, &request_body.pubkey_y, &request_body.r, &request_body.s, &request_body.msghash, &request_body.proving_key_path, DEGREE).unwrap();
+    let proof_hex = hex::encode(proof);
+    println!("{}", proof_hex);
+    Ok(proof_hex)
 }
 
 #[post("/prove", format = "application/json", data = "<request_body>")]
@@ -337,27 +345,45 @@ pub fn fix_verifier_sol(input_file: PathBuf) -> Result<String, Box<dyn Error>> {
 #[derive(serde::Deserialize)]
 struct GenerateEVMVerifierRequestBody {
     verifying_key_path: String,
-    sol_code_path: String
+    sol_code_path: String,
+    valid_proof_hex: Option<String>
 }
 
 #[post("/generate_evm_verifier", format = "application/json", data = "<request_body>")]
-fn generate_evm_verifier(request_body: Json<GenerateEVMVerifierRequestBody>) -> Result<Vec<u8>, Box<dyn Error>> {
-    let (bytes, yul_code) = generate_verifier(&request_body.verifying_key_path, DEGREE)?;
-    println!("{}", yul_code);
-    println!("1");
+fn generate_evm_verifier(request_body: Json<GenerateEVMVerifierRequestBody>) -> Result<String, Box<dyn Error>> {
+    let (bytes, yul_code) = generate_verifier(&request_body.verifying_key_path, DEGREE, &request_body.valid_proof_hex)?;
     let sol_code_path = PathBuf::from(request_body.sol_code_path.clone());
 
-    println!("2");
     let mut f = File::create(sol_code_path.clone())?;
     let _ = f.write(yul_code.as_bytes());
-    println!("3");
 
     let output = fix_verifier_sol(sol_code_path.clone())?;
-    println!("4");
 
     let mut f = File::create(sol_code_path)?;
     let _ = f.write(output.as_bytes());
-    Ok(bytes)
+    Ok(yul_code)
+}
+
+#[derive(serde::Deserialize)]
+struct VerifyRequestBody {
+    verifying_key_path: String,
+    proof: String
+}
+
+#[post("/verify", format = "application/json", data = "<request_body>")]
+fn verify_handler(request_body: Json<VerifyRequestBody>) -> Result<(), Box<dyn Error>> {
+    let proof = hex::decode(&request_body.proof)?;
+    let verified = verify(DEGREE, proof, &request_body.verifying_key_path)?;
+    println!("{}", verified);
+    Ok(())
+}
+
+#[post("/verify_evm", format = "application/json", data = "<request_body>")]
+fn verify_evm_handler(request_body: Json<VerifyRequestBody>) -> Result<(), Box<dyn Error>> {
+    let proof = hex::decode(&request_body.proof)?;
+    let verified = verify_evm(DEGREE, proof, &request_body.verifying_key_path)?;
+    println!("{}", verified);
+    Ok(())
 }
 
 fn make_cors() -> Cors {
@@ -370,5 +396,5 @@ fn make_cors() -> Cors {
 }
 
 fn main() {
-    rocket::ignite().mount("/", routes![hello, index, setup, prove, generate_evm_verifier]).attach(make_cors()).launch();
+    rocket::ignite().mount("/", routes![hello, index, setup, prove, prove_evm, generate_evm_verifier, verify_handler, verify_evm_handler]).attach(make_cors()).launch();
 }

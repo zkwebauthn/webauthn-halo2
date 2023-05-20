@@ -18,3 +18,4 @@ serde_json = "1.0"
 rand_core = { version = "0.6", default-features = false, features = ["getrandom"] }
 ark-std = { version = "0.3.0", features = ["print-trace"] }
 regex = "1.8.1"
+hex = "0.4.3"
