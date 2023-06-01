@@ -22,7 +22,7 @@ fn index() -> &'static str {
     "Hello, world!!!"
 }
 
-#[get("/setup")]
+#[post("/setup")]
 fn setup() -> &'static str {
     download_keys(DEGREE, Some("./keys/proving_key.pk"), Some("./keys/verifying_key.vk"));
     "Done"
@@ -346,12 +346,18 @@ pub fn fix_verifier_sol(input_file: PathBuf) -> Result<String, Box<dyn Error>> {
 struct GenerateEVMVerifierRequestBody {
     verifying_key_path: String,
     sol_code_path: String,
+    deploy_code_path: String,
     valid_proof_hex: Option<String>
 }
 
 #[post("/generate_evm_verifier", format = "application/json", data = "<request_body>")]
 fn generate_evm_verifier(request_body: Json<GenerateEVMVerifierRequestBody>) -> Result<String, Box<dyn Error>> {
     let (bytes, yul_code) = generate_verifier(&request_body.verifying_key_path, DEGREE, &request_body.valid_proof_hex)?;
+
+    let mut file = std::fs::File::create(request_body.deploy_code_path.clone()).map_err(Box::<dyn Error>::from)?;
+    file.write_all(&bytes)
+        .map_err(Box::<dyn Error>::from)?;
+
     let sol_code_path = PathBuf::from(request_body.sol_code_path.clone());
 
     let mut f = File::create(sol_code_path.clone())?;
