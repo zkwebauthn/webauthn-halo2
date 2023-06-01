@@ -18,3 +18,12 @@ The proving server API has a few endpoints for proving, verifying, and other rel
 - `POST /verify` - generate a proof using the the Blake2b transcript
 - `POST /verify_evm` - generate a proof using the the EVM transcript
 - `POST /generate_evm_verifier` - generate an EVM verifier and save to raw bytecode and Solidity
+
+## Testing & Benchmarks
+
+```bash
+# Test P-256 circuit correctness
+cargo test -- --nocapture test_secp256r1_ecdsa
+# Benchmarks for P-256 proving and verification
+cargo test -- --nocapture bench_secp256r1_ecdsa
+```
