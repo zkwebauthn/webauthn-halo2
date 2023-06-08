@@ -377,19 +377,25 @@ struct VerifyRequestBody {
 }
 
 #[post("/verify", format = "application/json", data = "<request_body>")]
-fn verify_handler(request_body: Json<VerifyRequestBody>) -> Result<(), Box<dyn Error>> {
+fn verify_handler(request_body: Json<VerifyRequestBody>) -> Result<&'static str, Box<dyn Error>> {
     let proof = hex::decode(&request_body.proof)?;
     let verified = verify(DEGREE, proof, &request_body.verifying_key_path)?;
-    println!("{}", verified);
-    Ok(())
+    if verified {
+        Ok("verified")
+    } else {
+        Ok("rejected")
+    }
 }
 
 #[post("/verify_evm", format = "application/json", data = "<request_body>")]
-fn verify_evm_handler(request_body: Json<VerifyRequestBody>) -> Result<(), Box<dyn Error>> {
+fn verify_evm_handler(request_body: Json<VerifyRequestBody>) -> Result<&'static str, Box<dyn Error>> {
     let proof = hex::decode(&request_body.proof)?;
     let verified = verify_evm(DEGREE, proof, &request_body.verifying_key_path)?;
-    println!("{}", verified);
-    Ok(())
+    if verified {
+        Ok("verified")
+    } else {
+        Ok("rejected")
+    }
 }
 
 fn make_cors() -> Cors {
