@@ -11,7 +11,7 @@ name = "halo2_circuits"
 [dependencies]
 halo2-base = { branch = "main", default-features = false, features = ["halo2-pse", "display"], git = "https://github.com/zkwebauthn/halo2-lib.git" }
 halo2-ecc = { branch = "main", default-features = false, features = ["halo2-pse", "display"], git = "https://github.com/zkwebauthn/halo2-lib.git" }
-halo2-dynamic-sha256 = { git = "https://github.com/zkemail/halo2-dynamic-sha256.git", version = "0.1.0", branch = "main" }
+# halo2-dynamic-sha256 = { git = "https://github.com/zkemail/halo2-dynamic-sha256.git", version = "0.1.0", branch = "main" }
 snark-verifier = { git = "https://github.com/zkwebauthn/snark-verifier", branch = "v2023_01_20_secp256r1" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
