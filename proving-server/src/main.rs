@@ -23,16 +23,9 @@ fn index() -> &'static str {
 }
 
 #[post("/setup")]
-fn setup() -> &'static str {
-    download_keys(DEGREE, Some("./keys/proving_key.pk"), Some("./keys/verifying_key.vk"));
-    "Done"
-}
-
-fn concat_arrays(a: [u8; 32], b: [u8; 32]) -> [u8; 64] {
-    let mut result = [0; 64];
-    result[..32].copy_from_slice(&a);
-    result[32..].copy_from_slice(&b);
-    result
+fn setup() -> Result<&'static str, Box<dyn Error>> {
+    download_keys(DEGREE, Some("./keys/proving_key.pk"), Some("./keys/verifying_key.vk"))?;
+    Ok("Done")
 }
 
 #[derive(serde::Deserialize)]
