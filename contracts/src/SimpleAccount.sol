@@ -13,17 +13,19 @@ import "./core/BaseAccount.sol";
 import "./callback/TokenCallbackHandler.sol";
 
 /**
-  * Account that validates P-256 signature for UserOperations.
+  * minimal account.
+  *  this is sample minimal account.
+  *  has execute, eth handling methods
+  *  has a single signer that can send requests through the entryPoint.
   */
-contract P256Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initializable {
+contract SimpleAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initializable {
     using ECDSA for bytes32;
 
     address public owner;
-    address public verifier;
 
     IEntryPoint private immutable _entryPoint;
 
-    event P256AccountInitialized(IEntryPoint indexed entryPoint, address indexed owner);
+    event SimpleAccountInitialized(IEntryPoint indexed entryPoint, address indexed owner);
 
     modifier onlyOwner() {
         _onlyOwner();
@@ -34,6 +36,7 @@ contract P256Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Init
     function entryPoint() public view virtual override returns (IEntryPoint) {
         return _entryPoint;
     }
+
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
@@ -69,17 +72,16 @@ contract P256Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Init
 
     /**
      * @dev The _entryPoint member is immutable, to reduce gas consumption.  To upgrade EntryPoint,
-     * a new implementation of P256Account must be deployed with the new EntryPoint address, then upgrading
+     * a new implementation of SimpleAccount must be deployed with the new EntryPoint address, then upgrading
       * the implementation by calling `upgradeTo()`
      */
-    function initialize(address anOwner, address aVerifier) public virtual initializer {
-        _initialize(anOwner, aVerifier);
+    function initialize(address anOwner) public virtual initializer {
+        _initialize(anOwner);
     }
 
-    function _initialize(address anOwner, address aVerifier) internal virtual {
+    function _initialize(address anOwner) internal virtual {
         owner = anOwner;
-        verifier = aVerifier;
-        emit P256AccountInitialized(_entryPoint, owner);
+        emit SimpleAccountInitialized(_entryPoint, owner);
     }
 
     // Require the function call went through EntryPoint or owner
@@ -87,16 +89,9 @@ contract P256Account is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Init
         require(msg.sender == address(entryPoint()) || msg.sender == owner, "account: not Owner or EntryPoint");
     }
 
-    /// verify P-256 snark
-    function _verifyRaw(bytes calldata proof) private returns (bool) {
-        (bool success,) = verifier.call(proof);
-        return success;
-    }
-
-    /// Validate WebAuthn P-256 signature
+    /// implement template method of BaseAccount
     function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
     internal override virtual returns (uint256 validationData) {
-        // TODO: Replace with webauthn verification
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         if (owner != hash.recover(userOp.signature))
             return SIG_VALIDATION_FAILED;
