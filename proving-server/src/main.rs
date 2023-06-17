@@ -42,7 +42,6 @@ struct ProveRequestBody {
 fn prove_evm(request_body: Json<ProveRequestBody>) -> Result<String, FromHexError> {
     let proof = generate_proof_evm(&request_body.pubkey_x, &request_body.pubkey_y, &request_body.r, &request_body.s, &request_body.msghash, &request_body.proving_key_path, DEGREE).unwrap();
     let proof_hex = hex::encode(proof);
-    println!("{}", proof_hex);
     Ok(proof_hex)
 }
 
@@ -50,7 +49,6 @@ fn prove_evm(request_body: Json<ProveRequestBody>) -> Result<String, FromHexErro
 fn prove(request_body: Json<ProveRequestBody>) -> Result<String, FromHexError> {
     let proof = generate_proof(&request_body.pubkey_x, &request_body.pubkey_y, &request_body.r, &request_body.s, &request_body.msghash, &request_body.proving_key_path, DEGREE).unwrap();
     let proof_hex = hex::encode(proof);
-    println!("{}", proof_hex);
     Ok(proof_hex)
 }
 
@@ -340,6 +338,7 @@ struct GenerateEVMVerifierRequestBody {
     verifying_key_path: String,
     sol_code_path: String,
     deploy_code_path: String,
+    yul_code_path: String,
     valid_proof_hex: Option<String>
 }
 
@@ -352,11 +351,12 @@ fn generate_evm_verifier(request_body: Json<GenerateEVMVerifierRequestBody>) -> 
         .map_err(Box::<dyn Error>::from)?;
 
     let sol_code_path = PathBuf::from(request_body.sol_code_path.clone());
+    let yul_code_path = PathBuf::from(request_body.yul_code_path.clone());
 
-    let mut f = File::create(sol_code_path.clone())?;
+    let mut f = File::create(yul_code_path.clone())?;
     let _ = f.write(yul_code.as_bytes());
 
-    let output = fix_verifier_sol(sol_code_path.clone())?;
+    let output = fix_verifier_sol(yul_code_path)?;
 
     let mut f = File::create(sol_code_path)?;
     let _ = f.write(output.as_bytes());
