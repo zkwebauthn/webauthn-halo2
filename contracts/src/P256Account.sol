@@ -2,9 +2,10 @@
 pragma solidity ^0.8.12;
 
 import "./core/BaseAccount.sol";
+import "./samples/SimpleAccount.sol";
 
-contract P256Account is BaseAccount {
-    IEntryPoint internal immutable _entryPoint;
+contract P256Account is SimpleAccount {
+    IEntryPoint internal immutable entryPoint;
     uint256 private _nonce;
     bytes public publicKey;
     uint256 public InactiveTimeLimit;
@@ -16,39 +17,18 @@ contract P256Account is BaseAccount {
         lastActiveTime = block.timestamp;
     }
 
-    constructor(address _entryPointAddress, bytes memory _publicKey) {
-        _entryPoint = IEntryPoint(_entryPointAddress);
+    constructor(
+        IEntryPoint _entryPoint,
+        bytes memory _publicKey
+    ) SimpleAccount(_entryPoint) {
+        entryPoint = _entryPoint;
         publicKey = _publicKey;
     }
 
-    receive() external payable {}
+    receive() external payable override {}
 
     function nonce() public view virtual returns (uint256) {
         return _nonce;
-    }
-
-    /// @inheritdoc BaseAccount
-    function entryPoint() public view virtual override returns (IEntryPoint) {
-        return _entryPoint;
-    }
-
-    /**
-     * execute a transaction (called directly by entryPoint)
-     */
-    function execute(address dest, uint256 value, bytes calldata func) external updateLastActive {
-        _requireFromEntryPoint();
-        _call(dest, value, func);
-    }
-
-    /**
-     * execute a sequence of transactions
-     */
-    function executeBatch(address[] calldata dest, bytes[] calldata func) external updateLastActive {
-        _requireFromEntryPoint();
-        require(dest.length == func.length, "wrong array lengths");
-        for (uint256 i = 0; i < dest.length; i++) {
-            _call(dest[i], 0, func[i]);
-        }
     }
 
     function setPublicKey(bytes calldata _publicKey) external updateLastActive {
@@ -56,7 +36,9 @@ contract P256Account is BaseAccount {
         publicKey = _publicKey;
     }
 
-    function setInactiveTimeLimit(uint256 _InactiveTimeLimit) external updateLastActive {
+    function setInactiveTimeLimit(
+        uint256 _InactiveTimeLimit
+    ) external updateLastActive {
         _requireFromEntryPoint();
         InactiveTimeLimit = _InactiveTimeLimit;
     }
@@ -68,30 +50,22 @@ contract P256Account is BaseAccount {
 
     function inherit() external {
         require(inheritor == msg.sender, "not inheritor");
-        require(block.timestamp - lastActiveTime > InactiveTimeLimit, "not inactive");
+        require(
+            block.timestamp - lastActiveTime > InactiveTimeLimit,
+            "not inactive"
+        );
         payable(inheritor).transfer(address(this).balance);
     }
 
     /// @inheritdoc BaseAccount
-    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
-        internal
-        view
-        override
-        returns (uint256 validationData)
-    {
+    function _validateSignature(
+        UserOperation calldata userOp,
+        bytes32 userOpHash
+    ) internal view override returns (uint256 validationData) {
         // TODO
     }
 
     function _validateAndUpdateNonce(UserOperation calldata userOp) internal {
         require(_nonce++ == userOp.nonce, "account: invalid nonce");
-    }
-
-    function _call(address target, uint256 value, bytes memory data) internal {
-        (bool success, bytes memory result) = target.call{value: value}(data);
-        if (!success) {
-            assembly {
-                revert(add(result, 32), mload(result))
-            }
-        }
     }
 }
