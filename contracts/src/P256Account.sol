@@ -5,7 +5,7 @@ import "./core/BaseAccount.sol";
 import "./samples/SimpleAccount.sol";
 
 contract P256Account is SimpleAccount {
-    IEntryPoint internal immutable entryPoint;
+    IEntryPoint internal immutable _entryPoint;
     uint256 private _nonce;
     bytes public publicKey;
     uint256 public InactiveTimeLimit;
@@ -18,14 +18,12 @@ contract P256Account is SimpleAccount {
     }
 
     constructor(
-        IEntryPoint _entryPoint,
+        IEntryPoint _anEntryPoint,
         bytes memory _publicKey
-    ) SimpleAccount(_entryPoint) {
-        entryPoint = _entryPoint;
+    ) SimpleAccount(_anEntryPoint) {
+        _entryPoint = _anEntryPoint;
         publicKey = _publicKey;
     }
-
-    receive() external payable override {}
 
     function nonce() public view virtual returns (uint256) {
         return _nonce;
