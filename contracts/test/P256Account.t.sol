@@ -11,26 +11,31 @@ contract CounterTest is Test {
     Counter public counter;
     EntryPoint public entryPoint;
     P256AccountFactory public accountFactory;
-    address public account;
+    P256Account public account;
 
+    // -------------------- 🧑‍🍼 Account Creation Constants 🧑‍🍼 --------------------
+    bytes constant publicKey = "iliketturtles";
+    bytes32 constant salt = keccak256("iwanttoberichardwhenigrowup");
+
+    /**
+     * Deploy the Entrypoint, AccountFactory, and a single account
+     */
     function setUp() public {
-        // Deploy EntryPoint
         entryPoint = new EntryPoint();
-        // Deploy Account Factory
         accountFactory = new P256AccountFactory();
-        // Deploy Account
-        uint256 salt = 0;
-        bytes memory args = abi.encode(entryPoint, "");
-        bytes memory bytecode = abi.encodePacked(
+        bytes memory constructorArgs = abi.encode(entryPoint, publicKey);
+        bytes memory initializationCode = abi.encodePacked(
             type(P256Account).creationCode,
-            args
+            constructorArgs
         );
-        account = accountFactory.create(salt, bytecode);
-        counter = new Counter();
+        account = P256Account(payable(accountFactory.create(salt, initializationCode)));
     }
 
-    function testCounter() public {
-        // Create a userOp that calls counter to increment it
-        assertEq(P256Account(payable(account)).nonce(), 0);
+    /**
+     * Test that the account was created correctly with the correct parameters
+     */
+    function testCreation() public {
+        assertEq(account.nonce(), 0);
+        assertEq(account.publicKey(), publicKey);
     }
 }

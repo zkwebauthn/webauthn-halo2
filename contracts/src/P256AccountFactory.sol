@@ -2,7 +2,7 @@
 pragma solidity ^0.8.12;
 
 contract P256AccountFactory {
-    function create(uint256 salt, bytes calldata initializationCode) public returns (address deploymentAddress) {
+    function create(bytes32 salt, bytes calldata initializationCode) public returns (address deploymentAddress) {
         bytes memory initCode = initializationCode;
 
         // using inline assembly: load data and length of data, then call CREATE2.
