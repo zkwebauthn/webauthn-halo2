@@ -6,6 +6,7 @@ import "../src/Counter.sol";
 import "../src/core/EntryPoint.sol";
 import "../src/P256Account.sol";
 import "../src/P256AccountFactory.sol";
+import {UserOperation} from "../src/interfaces/UserOperation.sol";
 
 contract CounterTest is Test {
     Counter public counter;
@@ -28,7 +29,9 @@ contract CounterTest is Test {
             type(P256Account).creationCode,
             constructorArgs
         );
-        account = P256Account(payable(accountFactory.create(salt, initializationCode)));
+        account = P256Account(
+            payable(accountFactory.create(salt, initializationCode))
+        );
     }
 
     /**
@@ -37,5 +40,27 @@ contract CounterTest is Test {
     function testCreation() public {
         assertEq(account.nonce(), 0);
         assertEq(account.publicKey(), publicKey);
+    }
+
+    /**
+     * Create a userOp and send it through the wallet
+     */
+    function testUserOpE2E() public {
+        UserOperation memory userOp = UserOperation({
+            sender: address(account),
+            nonce: entryPoint.getNonce(address(account), 0),
+            initCode: "",
+            callData: "",
+            callGasLimit: 10_000_000,
+            verificationGasLimit: 10_000_000,
+            preVerificationGas: 1_000_000,
+            maxFeePerGas: 10_000_000,
+            maxPriorityFeePerGas: 10_000_000,
+            paymasterAndData: "",
+            signature: ""
+        });
+        UserOperation[] memory userOps = new UserOperation[](1);
+        userOps[0] = userOp;
+        entryPoint.handleOps(userOps, payable(address(0)));
     }
 }
