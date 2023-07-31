@@ -32,16 +32,13 @@ contract CounterTest is Test {
     function setUp() public {
         counter = new Counter();
         entryPoint = new EntryPoint();
-        accountFactory = new P256AccountFactory();
+        accountFactory = new P256AccountFactory(entryPoint);
         bytes memory constructorArgs = abi.encode(entryPoint, publicKey);
         bytes memory initializationCode = abi.encodePacked(
             type(P256Account).creationCode,
             constructorArgs
         );
-        account = P256Account(
-            payable(accountFactory.create(salt, initializationCode))
-        );
-
+        account = accountFactory.createAccount(publicKey);
         vm.deal(richard, 1e50);
         vm.prank(richard);
         entryPoint.depositTo{value: 1e18}(address(account));
@@ -51,7 +48,7 @@ contract CounterTest is Test {
      * Check the account was created correctly with the correct parameters
      */
     function testCreation() public {
-        assertEq(account.nonce(), 0);
+        assertEq(account.getNonce(), 0);
         assertEq(account.publicKey(), publicKey);
     }
 

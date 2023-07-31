@@ -17,7 +17,7 @@ contract P256AccountFactory {
     IEntryPoint public immutable entryPoint;
 
     constructor(IEntryPoint _entryPoint) {
-        accountImplementation = new P256Account();
+        accountImplementation = new P256Account(_entryPoint);
         entryPoint = _entryPoint;
     }
 

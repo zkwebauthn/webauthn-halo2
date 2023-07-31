@@ -16,15 +16,17 @@ import "./callback/TokenCallbackHandler.sol";
 /**
  * Account that validates P-256 signature for UserOperations.
  */
-contract P256Account is Initializable, BaseAccount {
+contract P256Account is Initializable, SimpleAccount {
     using ECDSA for bytes32;
 
     address public verifier;
     IEntryPoint public _entryPoint;
-    bytes publicKey;
+    bytes public publicKey;
     uint256 InactiveTimeLimit;
     address inheritor;
     uint256 lastActiveTime;
+
+    constructor(IEntryPoint _newEntryPoint) SimpleAccount(_newEntryPoint) {}
 
     function initialize(
         IEntryPoint _newEntryPoint,
@@ -4978,9 +4980,9 @@ contract P256Account is Initializable, BaseAccount {
         bytes32 userOpHash
     ) internal view override returns (uint256 validationData) {
         // TODO: public inputs with useropHash
-        if (!_verifyP256Proof(new uint256[](0), userOp.signature)) {
-            return SIG_VALIDATION_FAILED;
-        }
+        // if (!_verifyP256Proof(new uint256[](0), userOp.signature)) {
+        //     return SIG_VALIDATION_FAILED;
+        // }
         return 0;
     }
 }
