@@ -1,14 +1,18 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
-use std::{error::Error, path::PathBuf, fs::File};
+use std::{error::Error, fs::File, path::PathBuf};
 
-use halo2_circuits::ecc::ecdsa_p256::{download_keys, generate_proof, generate_verifier, verify, generate_proof_evm, verify_evm};
-use std::io::Write;
+use halo2_circuits::ecc::ecdsa_p256::{
+    download_keys, generate_proof, generate_proof_evm, generate_verifier, verify, verify_evm,
+};
+use hex::FromHexError;
 use rocket::http::Method;
 use rocket_contrib::json::Json;
-use hex::FromHexError;
-use rocket_cors::{AllowedOrigins, AllowedHeaders, CorsOptions, Cors};
-#[macro_use] extern crate rocket;
+use rocket_cors::{AllowedHeaders, AllowedOrigins, Cors, CorsOptions};
+use serde::{Deserialize, Serialize};
+use std::io::Write;
+#[macro_use]
+extern crate rocket;
 
 const DEGREE: u32 = 17;
 
@@ -23,16 +27,13 @@ fn index() -> &'static str {
 }
 
 #[post("/setup")]
-fn setup() -> &'static str {
-    download_keys(DEGREE, Some("./keys/proving_key.pk"), Some("./keys/verifying_key.vk"));
-    "Done"
-}
-
-fn concat_arrays(a: [u8; 32], b: [u8; 32]) -> [u8; 64] {
-    let mut result = [0; 64];
-    result[..32].copy_from_slice(&a);
-    result[32..].copy_from_slice(&b);
-    result
+fn setup() -> Result<&'static str, Box<dyn Error>> {
+    download_keys(
+        DEGREE,
+        Some("./keys/proving_key.pk"),
+        Some("./keys/verifying_key.vk"),
+    )?;
+    Ok("Done")
 }
 
 #[derive(serde::Deserialize)]
@@ -47,17 +48,33 @@ struct ProveRequestBody {
 
 #[post("/prove_evm", format = "application/json", data = "<request_body>")]
 fn prove_evm(request_body: Json<ProveRequestBody>) -> Result<String, FromHexError> {
-    let proof = generate_proof_evm(&request_body.pubkey_x, &request_body.pubkey_y, &request_body.r, &request_body.s, &request_body.msghash, &request_body.proving_key_path, DEGREE).unwrap();
+    let proof = generate_proof_evm(
+        &request_body.pubkey_x,
+        &request_body.pubkey_y,
+        &request_body.r,
+        &request_body.s,
+        &request_body.msghash,
+        &request_body.proving_key_path,
+        DEGREE,
+    )
+    .unwrap();
     let proof_hex = hex::encode(proof);
-    println!("{}", proof_hex);
     Ok(proof_hex)
 }
 
 #[post("/prove", format = "application/json", data = "<request_body>")]
 fn prove(request_body: Json<ProveRequestBody>) -> Result<String, FromHexError> {
-    let proof = generate_proof(&request_body.pubkey_x, &request_body.pubkey_y, &request_body.r, &request_body.s, &request_body.msghash, &request_body.proving_key_path, DEGREE).unwrap();
+    let proof = generate_proof(
+        &request_body.pubkey_x,
+        &request_body.pubkey_y,
+        &request_body.r,
+        &request_body.s,
+        &request_body.msghash,
+        &request_body.proving_key_path,
+        DEGREE,
+    )
+    .unwrap();
     let proof_hex = hex::encode(proof);
-    println!("{}", proof_hex);
     Ok(proof_hex)
 }
 
@@ -347,23 +364,44 @@ struct GenerateEVMVerifierRequestBody {
     verifying_key_path: String,
     sol_code_path: String,
     deploy_code_path: String,
-    valid_proof_hex: Option<String>
+    yul_code_path: String,
+    valid_proof_hex: Option<String>,
 }
 
-#[post("/generate_evm_verifier", format = "application/json", data = "<request_body>")]
-fn generate_evm_verifier(request_body: Json<GenerateEVMVerifierRequestBody>) -> Result<String, Box<dyn Error>> {
-    let (bytes, yul_code) = generate_verifier(&request_body.verifying_key_path, DEGREE, &request_body.valid_proof_hex)?;
+#[derive(Debug, Deserialize, Serialize)]
+pub struct DeploymentCode {
+    code: Vec<u8>,
+}
 
-    let mut file = std::fs::File::create(request_body.deploy_code_path.clone()).map_err(Box::<dyn Error>::from)?;
-    file.write_all(&bytes)
+#[post(
+    "/generate_evm_verifier",
+    format = "application/json",
+    data = "<request_body>"
+)]
+fn generate_evm_verifier(
+    request_body: Json<GenerateEVMVerifierRequestBody>,
+) -> Result<String, Box<dyn Error>> {
+    let (bytes, yul_code) = generate_verifier(
+        &request_body.verifying_key_path,
+        DEGREE,
+        &request_body.valid_proof_hex,
+    )?;
+
+    let serialized =
+        serde_json::to_string(&DeploymentCode { code: bytes }).map_err(Box::<dyn Error>::from)?;
+
+    let mut file = std::fs::File::create(request_body.deploy_code_path.clone())
+        .map_err(Box::<dyn Error>::from)?;
+    file.write_all(serialized.as_bytes())
         .map_err(Box::<dyn Error>::from)?;
 
     let sol_code_path = PathBuf::from(request_body.sol_code_path.clone());
+    let yul_code_path = PathBuf::from(request_body.yul_code_path.clone());
 
-    let mut f = File::create(sol_code_path.clone())?;
+    let mut f = File::create(yul_code_path.clone())?;
     let _ = f.write(yul_code.as_bytes());
 
-    let output = fix_verifier_sol(sol_code_path.clone())?;
+    let output = fix_verifier_sol(yul_code_path)?;
 
     let mut f = File::create(sol_code_path)?;
     let _ = f.write(output.as_bytes());
@@ -373,7 +411,7 @@ fn generate_evm_verifier(request_body: Json<GenerateEVMVerifierRequestBody>) -> 
 #[derive(serde::Deserialize)]
 struct VerifyRequestBody {
     verifying_key_path: String,
-    proof: String
+    proof: String,
 }
 
 #[post("/verify", format = "application/json", data = "<request_body>")]
@@ -388,7 +426,9 @@ fn verify_handler(request_body: Json<VerifyRequestBody>) -> Result<&'static str,
 }
 
 #[post("/verify_evm", format = "application/json", data = "<request_body>")]
-fn verify_evm_handler(request_body: Json<VerifyRequestBody>) -> Result<&'static str, Box<dyn Error>> {
+fn verify_evm_handler(
+    request_body: Json<VerifyRequestBody>,
+) -> Result<&'static str, Box<dyn Error>> {
     let proof = hex::decode(&request_body.proof)?;
     let verified = verify_evm(DEGREE, proof, &request_body.verifying_key_path)?;
     if verified {
@@ -399,7 +439,8 @@ fn verify_evm_handler(request_body: Json<VerifyRequestBody>) -> Result<&'static 
 }
 
 fn make_cors() -> Cors {
-    CorsOptions { // 5.
+    CorsOptions {
+        // 5.
         allow_credentials: true,
         ..Default::default()
     }
@@ -408,5 +449,20 @@ fn make_cors() -> Cors {
 }
 
 fn main() {
-    rocket::ignite().mount("/", routes![hello, index, setup, prove, prove_evm, generate_evm_verifier, verify_handler, verify_evm_handler]).attach(make_cors()).launch();
+    rocket::ignite()
+        .mount(
+            "/",
+            routes![
+                hello,
+                index,
+                setup,
+                prove,
+                prove_evm,
+                generate_evm_verifier,
+                verify_handler,
+                verify_evm_handler
+            ],
+        )
+        .attach(make_cors())
+        .launch();
 }
