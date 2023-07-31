@@ -7,7 +7,6 @@ pragma solidity >=0.7.5 <0.9.0;
  * Utility functions helpful when making different kinds of contract calls in Solidity.
  */
 library Exec {
-
     function call(
         address to,
         uint256 value,

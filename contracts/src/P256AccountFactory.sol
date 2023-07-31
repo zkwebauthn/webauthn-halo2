@@ -14,9 +14,11 @@ import "./P256Account.sol";
  */
 contract P256AccountFactory {
     P256Account public immutable accountImplementation;
+    IEntryPoint public immutable entryPoint;
 
     constructor(IEntryPoint _entryPoint) {
         accountImplementation = new P256Account(_entryPoint);
+        entryPoint = _entryPoint;
     }
 
     /**
@@ -25,28 +27,46 @@ contract P256AccountFactory {
      * Note that during UserOperation execution, this method is called only if the account is not deployed.
      * This method returns an existing account address so that entryPoint.getSenderAddress() would work even after account creation
      */
-    function createAccount(address owner, uint256 salt, address verifier) public returns (P256Account ret) {
-        address addr = getAddress(owner, salt, verifier);
+    function createAccount(
+        bytes memory publicKey
+    ) public returns (P256Account ret) {
+        address addr = getAddress(publicKey);
         uint codeSize = addr.code.length;
         if (codeSize > 0) {
             return P256Account(payable(addr));
         }
-        ret = P256Account(payable(new ERC1967Proxy{salt : bytes32(salt)}(
-                address(accountImplementation),
-                abi.encodeCall(P256Account.initialize, (owner, verifier))
-            )));
+        ret = P256Account(
+            payable(
+                new ERC1967Proxy{salt: bytes32(keccak256(publicKey))}(
+                    address(accountImplementation),
+                    abi.encodeCall(
+                        P256Account.initialize,
+                        (entryPoint, publicKey)
+                    )
+                )
+            )
+        );
     }
 
     /**
      * calculate the counterfactual address of this account as it would be returned by createAccount()
      */
-    function getAddress(address owner, uint256 salt, address verifier) public view returns (address) {
-        return Create2.computeAddress(bytes32(salt), keccak256(abi.encodePacked(
-                type(ERC1967Proxy).creationCode,
-                abi.encode(
-                    address(accountImplementation),
-                    abi.encodeCall(P256Account.initialize, (owner, verifier))
+    function getAddress(bytes memory publicKey) public view returns (address) {
+        return
+            Create2.computeAddress(
+                bytes32(keccak256(publicKey)),
+                keccak256(
+                    abi.encodePacked(
+                        type(ERC1967Proxy).creationCode,
+                        abi.encode(
+                            address(accountImplementation),
+                            abi.encodeCall(
+                                P256Account.initialize,
+                                (entryPoint, publicKey)
+                            )
+                        )
+                    )
                 )
-            )));
+            );
     }
 }
