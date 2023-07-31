@@ -14,7 +14,7 @@ import {UserOperation} from "../src/interfaces/UserOperation.sol";
  * @notice This is a sanity test for the account function.
  * We want to be able to send a userOp through the entrypoint and have it execute
  */
-contract CounterTest is Test {
+contract P256AccountTest is Test {
     Counter public counter;
     EntryPoint public entryPoint;
     P256AccountFactory public accountFactory;
