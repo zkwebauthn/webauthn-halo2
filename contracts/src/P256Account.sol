@@ -72,10 +72,9 @@ contract P256Account is Initializable, SimpleAccount {
 
     /// @inheritdoc BaseAccount
     function _validateSignature(
-        UserOperation calldata userOp,
-        bytes32 userOpHash
+        UserOperation calldata userOp, bytes32
     ) internal override returns (uint256 validationData) {
-        // TODO: public inputs with useropHash
+        // Add hashedMessage as public input with useropHash
         (bool success,) = snarkVerifier.call(userOp.signature);
         if (!success) {
             return SIG_VALIDATION_FAILED;
