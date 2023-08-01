@@ -15,10 +15,12 @@ import "./P256Account.sol";
 contract P256AccountFactory {
     P256Account public immutable accountImplementation;
     IEntryPoint public immutable entryPoint;
+    address public snarkVerifier;
 
-    constructor(IEntryPoint _entryPoint) {
+    constructor(IEntryPoint _entryPoint, address _snarkVerifier) {
         accountImplementation = new P256Account(_entryPoint);
         entryPoint = _entryPoint;
+        snarkVerifier = _snarkVerifier;
     }
 
     /**
@@ -41,7 +43,7 @@ contract P256AccountFactory {
                     address(accountImplementation),
                     abi.encodeCall(
                         P256Account.initialize,
-                        (entryPoint, publicKey)
+                        (entryPoint, publicKey, snarkVerifier)
                     )
                 )
             )
@@ -62,7 +64,7 @@ contract P256AccountFactory {
                             address(accountImplementation),
                             abi.encodeCall(
                                 P256Account.initialize,
-                                (entryPoint, publicKey)
+                                (entryPoint, publicKey, snarkVerifier)
                             )
                         )
                     )
