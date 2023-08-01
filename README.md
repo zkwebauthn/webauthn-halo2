@@ -27,9 +27,14 @@ The proving server API has a few endpoints for proving, verifying, and other rel
 
 ```bash
 # Test P-256 circuit correctness
+cd halo2-circuits/
 cargo test -- --nocapture test_secp256r1_ecdsa
 # Benchmarks for P-256 proving and verification
+cd halo2-circuits/
 cargo test -- --nocapture bench_secp256r1_ecdsa
+# Benchmarks for sending a userOp via ERC-4337
+cd contracts/
+forge test --gas-report
 ```
 
 ## P-256 Wallet
