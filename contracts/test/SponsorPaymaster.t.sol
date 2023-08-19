@@ -7,6 +7,7 @@ import "../src/core/EntryPoint.sol";
 import "../src/P256Account.sol";
 import "../src/P256AccountFactory.sol";
 import {UserOperation} from "../src/interfaces/UserOperation.sol";
+import "../src/SponsorPaymaster.sol";
 
 /**
  * @title CounterTest
@@ -19,6 +20,7 @@ contract P256AccountTest is Test {
     EntryPoint public entryPoint;
     P256AccountFactory public accountFactory;
     P256Account public account;
+    SponsorPaymaster public paymaster;
     address snarkVerifier;
 
     // -------------------- 🧑‍🍼 Account Creation Constants 🧑‍🍼 --------------------
@@ -42,6 +44,7 @@ contract P256AccountTest is Test {
      */
     function _createUserOp(
         bytes memory callData,
+        bytes memory paymasterAndData,
         bytes memory signature
     ) internal view returns (UserOperation memory userOp) {
         userOp = UserOperation({
@@ -54,7 +57,7 @@ contract P256AccountTest is Test {
             preVerificationGas: 1_000_000,
             maxFeePerGas: 10_000_000,
             maxPriorityFeePerGas: 10_000_000,
-            paymasterAndData: "",
+            paymasterAndData: paymasterAndData,
             signature: signature
             // signature is the calldata to the P256 SNARK verifier
         });
@@ -72,7 +75,8 @@ contract P256AccountTest is Test {
         account = accountFactory.createAccount(publicKey);
         vm.deal(richard, 1e50);
         vm.prank(richard);
-        entryPoint.depositTo{value: 1e18}(address(account));
+        paymaster = new SponsorPaymaster(entryPoint);
+        paymaster.deposit{value: 1 ether}();
     }
 
     /**
@@ -86,7 +90,7 @@ contract P256AccountTest is Test {
     /**
      * Create a userOp that increments the counter and send it through the entrypoint
      */
-    function testUserOpE2ESuccess() public {
+    function testUserOpWithPaymaster() public {
         assertEq(counter.number(), 0);
         bytes memory incrementCounterCallData = abi.encodeWithSelector(
             account.execute.selector,
@@ -95,26 +99,14 @@ contract P256AccountTest is Test {
             abi.encodeWithSelector(counter.increment.selector)
         );
         UserOperation[] memory userOps = new UserOperation[](1);
-        userOps[0] = _createUserOp(incrementCounterCallData, validSignature);
+        bytes memory paymasterAndData = abi.encodePacked(paymaster);
+        userOps[0] = _createUserOp(
+            incrementCounterCallData,
+            paymasterAndData,
+            validSignature
+        );
         entryPoint.handleOps(userOps, payable(richard));
         assertEq(counter.number(), 1);
-    }
-
-    /**
-     * Create a userOp that fails to increments the counter and send it through the entrypoint, because of invalid signature
-     */
-    function testUserOpE2EFailure() public {
-        bytes memory invalidSignature = hex"";
-        bytes memory incrementCounterCallData = abi.encodeWithSelector(
-            account.execute.selector,
-            address(counter),
-            0,
-            abi.encodeWithSelector(counter.increment.selector)
-        );
-        UserOperation[] memory userOps = new UserOperation[](1);
-        userOps[0] = _createUserOp(incrementCounterCallData, invalidSignature);
-        vm.expectRevert();
-        entryPoint.handleOps(userOps, payable(richard));
     }
 
     bytes validSignature =
