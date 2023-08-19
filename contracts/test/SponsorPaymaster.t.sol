@@ -76,7 +76,6 @@ contract P256AccountTest is Test {
         vm.deal(richard, 1e50);
         vm.startPrank(richard);
         paymaster = new SponsorPaymaster(entryPoint);
-        paymaster.deposit{value: 1 ether}();
     }
 
     /**
@@ -91,6 +90,7 @@ contract P256AccountTest is Test {
      * Create a userOp that increments the counter and send it through the entrypoint
      */
     function testUserOpWithPaymaster() public {
+        paymaster.deposit{value: 1 ether}();
         assertEq(counter.number(), 0);
         bytes memory incrementCounterCallData = abi.encodeWithSelector(
             account.execute.selector,
@@ -107,6 +107,28 @@ contract P256AccountTest is Test {
         );
         entryPoint.handleOps(userOps, payable(richard));
         assertEq(counter.number(), 1);
+    }
+
+    /**
+     * Create a userOp that increments the counter and send it through the entrypoint
+     */
+    function testUserOpWithPaymasterNoDeposit() public {
+        assertEq(counter.number(), 0);
+        bytes memory incrementCounterCallData = abi.encodeWithSelector(
+            account.execute.selector,
+            address(counter),
+            0,
+            abi.encodeWithSelector(counter.increment.selector)
+        );
+        UserOperation[] memory userOps = new UserOperation[](1);
+        bytes memory paymasterAndData = abi.encodePacked(paymaster);
+        userOps[0] = _createUserOp(
+            incrementCounterCallData,
+            paymasterAndData,
+            validSignature
+        );
+        vm.expectRevert();
+        entryPoint.handleOps(userOps, payable(richard));
     }
 
     bytes validSignature =
