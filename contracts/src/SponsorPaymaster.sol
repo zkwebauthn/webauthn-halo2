@@ -5,13 +5,12 @@ import "./core/BasePaymaster.sol";
 
 /**
  * Paymaster that pays for everything, given the user is authorized.
- * Based on contract provided by Ethereum Foundation.
+ * Based on contract provided by Ethereum Foundation and Visa Crypto
  */
 contract SponsorPaymaster is BasePaymaster {
-    mapping(address => bool) private authorized; //whitelist for paymaster access
+    mapping(address => bool) public authorized; //whitelist for paymaster access
 
     constructor(IEntryPoint _entryPoint) BasePaymaster(_entryPoint) {
-        // to support "deterministic address" factory
         _transferOwnership(msg.sender);
     }
 
@@ -27,6 +26,7 @@ contract SponsorPaymaster is BasePaymaster {
         returns (bytes memory context, uint256 validationData)
     {
         //Check if the user is authorized to use the paymaster.
+        // Leaving this commented out for now until a bundler supports custom tx.origin stuff
         // require(authorized[tx.origin], "User is not authorized.");
 
         (userOp, userOpHash, maxCost);
