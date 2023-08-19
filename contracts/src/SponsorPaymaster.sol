@@ -12,10 +12,7 @@ contract SponsorPaymaster is BasePaymaster {
 
     constructor(IEntryPoint _entryPoint) BasePaymaster(_entryPoint) {
         // to support "deterministic address" factory
-        // solhint-disable avoid-tx-origin
-        if (tx.origin != msg.sender) {
-            _transferOwnership(tx.origin);
-        }
+        _transferOwnership(msg.sender);
     }
 
     function _validatePaymasterUserOp(
@@ -30,8 +27,7 @@ contract SponsorPaymaster is BasePaymaster {
         returns (bytes memory context, uint256 validationData)
     {
         //Check if the user is authorized to use the paymaster.
-        // address user = userOp.sender;
-        // require(authorized[user], "User is not authorized.");
+        // require(authorized[tx.origin], "User is not authorized.");
 
         (userOp, userOpHash, maxCost);
         return ("", 0); //There is no paymaster data to send (e.g., time range)

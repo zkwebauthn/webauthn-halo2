@@ -74,7 +74,7 @@ contract P256AccountTest is Test {
         accountFactory = new P256AccountFactory(entryPoint, snarkVerifier);
         account = accountFactory.createAccount(publicKey);
         vm.deal(richard, 1e50);
-        vm.prank(richard);
+        vm.startPrank(richard);
         paymaster = new SponsorPaymaster(entryPoint);
         paymaster.deposit{value: 1 ether}();
     }
