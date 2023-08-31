@@ -449,6 +449,11 @@ fn make_cors() -> Cors {
 }
 
 fn main() {
+    download_keys(
+        DEGREE,
+        Some("./keys/proving_key.pk"),
+        Some("./keys/verifying_key.vk"),
+    ).expect("Key generation failed");
     rocket::ignite()
         .mount(
             "/",
