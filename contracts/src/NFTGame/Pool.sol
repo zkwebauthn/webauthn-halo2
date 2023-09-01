@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.12;
+
 /**
  * @notice This is a gambling pool, which lets you gamble with ERC20s and NFTs, similar to csgoempire.co
  * 1. Users deposit NFTs and ERC20s into the pool and receive a proportional amount of point
@@ -23,7 +26,7 @@ contract Pool is TokenCallbackHandler {
 
     IPriceOracle public oracle;
     IRandomNumberGenerator public random;
-    uint256 WITHDRAW_TIME = 30 seconds;
+    uint256 WITHDRAW_TIME = 5 minutes;
 
     constructor(IPriceOracle _oracle, IRandomNumberGenerator _random) {
         oracle = _oracle;
@@ -82,6 +85,7 @@ contract Pool is TokenCallbackHandler {
     }
 
     function spin() public {
+        require(block.timestamp > withdrawExpiration, "Withdraw not expired");
         winningNumber =
             (random.getRandomNumber() %
                 (depositValue - totalPrevDepositValue)) +
@@ -101,7 +105,7 @@ contract Pool is TokenCallbackHandler {
         address token,
         uint256 amount
     ) internal {
-        IERC20(token).transferFrom(address(this), winner, amount);
+        IERC20(token).transfer(winner, amount);
         emit WithdrawERC20(winner, token, amount);
     }
 
