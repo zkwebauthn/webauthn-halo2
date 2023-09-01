@@ -2,10 +2,10 @@
 pragma solidity ^0.8.12;
 
 /**
- * @notice This is a gambling pool, which lets you gamble with ERC20s and NFTs, similar to csgoempire.co
+ * @notice This is similar to csgoempire.co
  * 1. Users deposit NFTs and ERC20s into the pool and receive a proportional amount of point
  * 2. Every hour, the pool is spun, a random number between 0 and the total amount of points is generated
- * 3. The user who has the point wins everything in the pool, you get 30 seconds to claim otherwise rewards stay in the pool
+ * 3. The user who has the point wins everything in the pool, you get 5 minutes to claim otherwise rewards stay in the pool
  */
 import "./interfaces/IPriceOracle.sol";
 import "./interfaces/IRandomNumberGenerator.sol";
@@ -126,7 +126,7 @@ contract Pool is TokenCallbackHandler {
     ) public {
         require(
             deposits[msg.sender].startIndex <= winningNumber &&
-                deposits[msg.sender].endIndex >= winningNumber,
+                deposits[msg.sender].endIndex > winningNumber,
             "You didn't win"
         );
         require(block.timestamp < withdrawExpiration, "Withdraw expired");

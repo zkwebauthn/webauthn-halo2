@@ -30,7 +30,7 @@ contract NFTGame is Test {
         erc721.mint(richard, tokenId);
         oracle.setERC20Price(address(erc20), 1e18);
         oracle.setERC721Price(address(erc721), tokenId, 1e18);
-        oracle.setEthPrice(1);
+        oracle.setEthPrice(1e18);
     }
 
     function testE2E() public {
