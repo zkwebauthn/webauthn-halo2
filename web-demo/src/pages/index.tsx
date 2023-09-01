@@ -209,7 +209,7 @@ export default function Home() {
 
       const fetched = localStorage.getItem(authenticationResponse.id);
       if (!fetched) {
-        throw new Error(`Not stored for ${authenticationResponse.id}`);
+        throw new Error("Credential not stored. Please try registering again!");
       }
 
       const authenticator = JSON.parse(fetched);
@@ -295,7 +295,7 @@ export default function Home() {
 
       setStage(TransactionStage.GeneratingUserOp);
       const SIMPLE_ACCOUNT_FACTORY_ADDRESS =
-        "0x702AB84954aC4332718AA1297F7A9c94218c18EB";
+        "0xDb53929659505D0979FcC0ec9889e373a62eeE32";
       const baseGoerliProvider = new ethers.providers.StaticJsonRpcProvider(
         "https://base-goerli.public.blastapi.io/"
       );
