@@ -1,5 +1,3 @@
-**NOTE: Contracts and circuits are WIP and unaudited. Use at your own risk.**
-
 # webauthn-halo2
 
 Proving and verifying WebAuthn with Halo2, specifically the [ES256 algorithm variant](https://www.w3.org/TR/webauthn-2/#sctn-alg-identifier) with the [P-256 curve](https://neuromancer.sk/std/secg/secp256r1), which is present on Apple's [Face/Touch ID devices](https://developer.apple.com/documentation/cryptokit/p256/signing/ecdsasignature), Intel [secure enclaves](https://download.01.org/intel-sgx/sgx-dcap/1.7/linux/docs/Intel_SGX_ECDSA_QuoteLibReference_DCAP_API.pdf), Yubikey [authenticators](https://developers.yubico.com/YubiHSM2/Concepts/Algorithms.html), and more.
