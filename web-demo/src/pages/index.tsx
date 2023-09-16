@@ -452,8 +452,8 @@ export default function Home() {
       const generatedRegistrationOptions = await generateRegistrationOptions({
         rpName: "demo",
         rpID: window.location.hostname,
-        userID: username || "user",
-        userName: username || "user",
+        userID: username || "Based Account",
+        userName: username || "Based Account",
         attestationType: "direct",
         challenge: "asdf",
         supportedAlgorithmIDs: [-7],
@@ -500,12 +500,12 @@ export default function Home() {
   // const isRegistered = localStorage.getItem("user-registered") === "true";
 
   return (
-    <div className="w-screen h-screen flex justify-center items-center">
-      <div className="flex flex-col items-center border-gray-200 border rounded-md p-8 gap-6">
+    <div className="w-screen h-screen flex justify-center items-center dark:bg-black  bg-gray-200">
+      <div className="flex flex-col items-center border-gray-200 border rounded-md py-8 px-4 gap-6 m-6">
         <Image width={80} height={80} src="/touchID.png" alt="Touch ID" />
-        <h1 className="text-3xl font-bold text-orange-700">Passkey Wallet</h1>
-        <div className="text-center">
-          <p>Send Ethereum transactions with just your fingerprint.</p>
+        <h1 className="text-3xl font-bold text-orange-700">ZK Face ID</h1>
+        <div className="text-center text-gray-900 dark:text-white">
+          <p>Send Ethereum transactions directly in the browser.</p>
         </div>
         <button
           className={`text-black font-bold py-2 px-4 rounded-md bg-white ${
@@ -539,9 +539,9 @@ export default function Home() {
                 {stage === TransactionStage.GeneratingUserOp &&
                   "Building UserOperation..."}
                 {stage === TransactionStage.SendingUserOp &&
-                  "Sending UserOperation to bundler..."}
+                  "Sending to bundler..."}
                 {stage === TransactionStage.QueryingForReceipts &&
-                  "UserOperation sent, querying for receipts..."}
+                  "Sent, querying for receipts..."}
               </>
               <svg
                 aria-hidden="true"
@@ -567,8 +567,8 @@ export default function Home() {
               target="_blank"
               href={`https://goerli.basescan.org/tx/${txHash}`}
             >
-              Transaction confirmed at 0x{txHash.slice(0, 4)}...
-              {txHash.slice(-3)} ✅
+              Transaction confirmed at 0x{txHash.slice(0, 3)}...
+              {txHash.slice(-2)} ✅
             </a>
           </p>
         )}

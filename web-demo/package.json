@@ -16,7 +16,7 @@
     "@peculiar/asn1-schema": "^2.3.6",
     "@simplewebauthn/browser": "^7.1.0",
     "@simplewebauthn/server": "^7.0.1",
-    "@types/node": "18.15.1",
+    "@types/node": "16.*.*",
     "@types/react": "18.0.28",
     "@types/react-dom": "18.0.11",
     "asn1js": "^3.0.5",
