@@ -35,9 +35,10 @@ cd contracts/
 forge test --gas-report
 ```
 
+Benchmarks for a 16GB Macbook Pro with an M1 Pro chip are available at [ecdsa_bench.csv](halo2-circuits/src/results/ecdsa_bench.csv).
+
 ## P-256 Wallet
 
 The primary application of this project is to implement a [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) "smart contract wallet" that verifies WebAuthn signatures. No wallet extensions or wallet apps are needed – users could send stablecoins, mint POAPs, or sign any other transactions purely within their browser. This is especially powerful for mobile devices with fingerprint / facial scans, where users can sign transactions within a mobile browser like Safari or Chrome.
 
 ![image](https://github.com/zkwebauthn/webauthn-halo2/assets/36896271/b4dfd3ea-7293-4ed5-a511-32dd9567f19a)
-
