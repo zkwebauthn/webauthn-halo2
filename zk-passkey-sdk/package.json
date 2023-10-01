@@ -1,0 +1,13 @@
+{
+  "name": "zk-passkey-sdk",
+  "version": "1.0.0",
+  "description": "A TypeScript SDK for zero-knowledge authentication.",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@simplewebauthn/browser": "^8.2.1",
+    "@simplewebauthn/server": "^8.2.0"
+  }
+}
