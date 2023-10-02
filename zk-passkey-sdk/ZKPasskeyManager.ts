@@ -8,11 +8,6 @@ import { startRegistration } from "@simplewebauthn/browser";
 import { decodeFirst } from "./utils";
 import axios from "axios";
 
-const API_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://proving-server.onrender.com"
-    : "http://localhost:8000";
-
 interface ZKPasskeyManagerArgs {
   apiKey: string;
   chainId: number;
@@ -58,16 +53,6 @@ export class ZKPasskeyManager {
       verificationResponse.registrationInfo!;
 
     const publicKey = decodeFirst<any>(credentialPublicKey);
-
-    // TODO: Call proving server
-    // const { data: proof } = await axios.post(`${API_URL}/prove_evm`, {
-    //   r: Array.from(new Uint8Array(rBytes)).reverse(),
-    //   s: Array.from(new Uint8Array(sBytes)).reverse(),
-    //   pubkey_x: Array.from(new Uint8Array(x)).reverse(),
-    //   pubkey_y: Array.from(new Uint8Array(y)).reverse(),
-    //   msghash: Array.from(new Uint8Array(hashedMessage)).reverse(),
-    //   proving_key_path: "./keys/proving_key.pk",
-    // });
 
     return this.fromPublicKey(publicKey);
   }

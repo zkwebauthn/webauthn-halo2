@@ -32,7 +32,7 @@
   resolved "https://registry.yarnpkg.com/@cbor-extract/cbor-extract-win32-x64/-/cbor-extract-win32-x64-2.1.1.tgz#21b11a1a3f18c3e7d62fd5f87438b7ed2c64c1f7"
   integrity sha512-2Niq1C41dCRIDeD8LddiH+mxGlO7HJ612Ll3D/E73ZWBmycued+8ghTr/Ho3CMOWPUEr08XtyBMVXAjqF+TcKw==
 
-"@hexagon/base64@^1.1.27":
+"@hexagon/base64@^1.1.27", "@hexagon/base64@^1.1.28":
   version "1.1.28"
   resolved "https://registry.yarnpkg.com/@hexagon/base64/-/base64-1.1.28.tgz#7d306a97f1423829be5b27c9d388fe50e3099d48"
   integrity sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==
@@ -155,7 +155,7 @@ cbor-extract@^2.1.1:
     "@cbor-extract/cbor-extract-linux-x64" "2.1.1"
     "@cbor-extract/cbor-extract-win32-x64" "2.1.1"
 
-cbor-x@^1.5.2:
+cbor-x@^1.5.2, cbor-x@^1.5.4:
   version "1.5.4"
   resolved "https://registry.yarnpkg.com/cbor-x/-/cbor-x-1.5.4.tgz#8f0754fa8589cbd7339b613b2b5717d133508e98"
   integrity sha512-PVKILDn+Rf6MRhhcyzGXi5eizn1i0i3F8Fe6UMMxXBnWkalq9+C5+VTmlIjAYM4iF2IYF2N+zToqAfYOp+3rfw==

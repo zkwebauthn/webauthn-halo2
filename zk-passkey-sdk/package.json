@@ -8,8 +8,12 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "@hexagon/base64": "^1.1.28",
+    "@peculiar/asn1-ecc": "^2.3.6",
+    "@peculiar/asn1-schema": "^2.3.6",
     "@simplewebauthn/browser": "^8.2.1",
     "@simplewebauthn/server": "^8.2.0",
-    "axios": "^1.5.1"
+    "axios": "^1.5.1",
+    "cbor-x": "^1.5.4"
   }
 }
