@@ -83,6 +83,7 @@ contract SocialRecoveryAccount is P256Account {
         require(isRecoveryGroupMember, "Not a recovery group member");
         challenge = abi.encode(blockhash(block.number), _publicKey);
         challengePeriodEndTime = block.timestamp + CHALLENGE_PERIOD;
+        newPublicKey = _publicKey;
     }
 
     /**
