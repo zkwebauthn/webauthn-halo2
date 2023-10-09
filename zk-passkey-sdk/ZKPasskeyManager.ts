@@ -14,11 +14,9 @@ interface ZKPasskeyManagerArgs {
 type RegisterNewPasskeyArgs = Partial<GenerateRegistrationOptionsOpts>;
 
 export class ZKPasskeyManager {
-  private _chainId: number;
   private _apiKey: string;
 
   constructor(args: ZKPasskeyManagerArgs) {
-    this._chainId = args.chainId;
     this._apiKey = args.apiKey;
   }
 
@@ -54,7 +52,6 @@ export class ZKPasskeyManager {
   public fromPublicKey(publicKey: Uint8Array): Passkey {
     return new Passkey({
       apiKey: this._apiKey,
-      chainId: this._chainId,
       publicKey,
     });
   }

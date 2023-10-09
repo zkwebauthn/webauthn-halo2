@@ -1,3 +1,19 @@
+## Install
+
+Using yarn
+
+```sh
+yarn add knownothing
+```
+
+Using npm
+
+```sh
+npm install --save knownothing
+```
+
+## Usage
+
 Typescript:
 
 ```typescript
@@ -5,7 +21,6 @@ import { ZKPasskeyManager, Chain, Wallet, Passkey } from "zk-passkeys";
 
 /** Register a new passkey and set a recovery method */
 const zkPasskeyManager = new ZKPasskeyManager({
-  chain: Chain.Base_Goerli,
   apiKey: "your-api-key-here",
 });
 // Signs the WebAuthn challenge and generates a proof

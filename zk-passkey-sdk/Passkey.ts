@@ -17,12 +17,10 @@ const API_URL =
 
 interface PasskeyArgs {
   apiKey: string;
-  chainId: number;
   publicKey: Uint8Array;
 }
 
 export class Passkey {
-  private _chainId: number;
   private _httpClient: AxiosInstance;
   private _publicKey: Uint8Array;
 
@@ -32,7 +30,6 @@ export class Passkey {
         Authorization: `Bearer ${args.apiKey}`,
       },
     });
-    this._chainId = args.chainId;
     this._publicKey = args.publicKey;
   }
 
@@ -101,7 +98,6 @@ export class Passkey {
         pubkey_y: Array.from(new Uint8Array(y)).reverse(),
         msghash: Array.from(new Uint8Array(hashedMessage)).reverse(),
         proving_key_path: "./keys/proving_key.pk",
-        chain_id: this._chainId,
       }
     );
     return proof;

@@ -1,8 +1,11 @@
 {
-  "name": "zk-passkey-sdk",
+  "name": "knownothing",
   "version": "1.0.0",
   "description": "A TypeScript SDK for zero-knowledge authentication.",
   "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
   "devDependencies": {
     "@types/node": "^20.8.0",
     "typescript": "^5.2.2"
