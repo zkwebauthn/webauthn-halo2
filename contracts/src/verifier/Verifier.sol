@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable2Step.sol";
  * Each account has a public key stored on chain.
  * This contract is used to verify the signature of the passkey for an account via a zk proof.
  * The zk proof states that the account's public key signed a specific piece of challenge data.
- * 
+ *
  * @title Verifier
  * @author Know Nothing Labs
  */
@@ -36,7 +36,7 @@ contract Verifier is Ownable2Step {
      * @param proof Zk proof of the passkey signature
      */
 	function verifyPasskeySignature(address account, bytes memory proof, bytes memory challenge) external returns(bool) {
-        (bool success,) = snarkVerifier.call(abi.encode(publicKeys[account], proof));
+        (bool success,) = snarkVerifier.call(abi.encode(publicKeys[account], proof, challenge));
         emit Verification(account, success);
         return success;
     }
