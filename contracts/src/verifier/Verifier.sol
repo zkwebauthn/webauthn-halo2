@@ -36,7 +36,7 @@ contract Verifier is Ownable2Step {
      * @param proof Zk proof of the passkey signature
      */
 	function verifyPasskeySignature(address account, bytes memory proof, bytes memory challenge) external returns(bool) {
-        (bool success,) = snarkVerifier.call(abi.encode(publicKeys[account], proof, challenge));
+        (bool success,) = snarkVerifier.call(abi.encode(proof));
         emit Verification(account, success);
         return success;
     }
