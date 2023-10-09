@@ -4,10 +4,9 @@ import { generateAuthenticationOptions } from "@simplewebauthn/server";
 import {
   concatUint8Arrays,
   decodeFirst,
-  parseAuthenticatorData,
   shouldRemoveLeadingZero,
 } from "./utils";
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
 import { AsnParser } from "@peculiar/asn1-schema";
 import { ECDSASigValue } from "@peculiar/asn1-ecc";
 
@@ -19,17 +18,20 @@ const API_URL =
 interface PasskeyArgs {
   apiKey: string;
   chainId: number;
-  publicKey: string;
+  publicKey: Uint8Array;
 }
 
 export class Passkey {
   private _chainId: number;
-  private _apiKey: string;
-  private _publicKey: string;
-  private _credentialPublicKey: Uint8Array;
+  private _httpClient: AxiosInstance;
+  private _publicKey: Uint8Array;
 
   constructor(args: PasskeyArgs) {
-    this._apiKey = args.apiKey;
+    this._httpClient = axios.create({
+      headers: {
+        Authorization: `Bearer ${args.apiKey}`,
+      },
+    });
     this._chainId = args.chainId;
     this._publicKey = args.publicKey;
   }
@@ -58,7 +60,6 @@ export class Passkey {
       authenticationResponse.response.signature,
       true
     );
-    const parsed = parseAuthenticatorData(new Uint8Array(authenticatorData));
 
     const hashedClientData = await window.crypto.subtle.digest(
       "SHA-256",
@@ -74,19 +75,11 @@ export class Passkey {
       preimage
     );
 
-    // Check
-    const publicKey = decodeFirst<any>(this._credentialPublicKey);
+    const publicKey = decodeFirst<any>(this._publicKey);
 
     const x = publicKey.get(-2);
     const y = publicKey.get(-3);
 
-    const keyData = {
-      kty: "EC",
-      crv: "P-256",
-      x: base64.fromArrayBuffer(x, true),
-      y: base64.fromArrayBuffer(y, true),
-      ext: false,
-    };
     const parsedSignature = AsnParser.parse(signature, ECDSASigValue);
     let rBytes = new Uint8Array(parsedSignature.r);
     let sBytes = new Uint8Array(parsedSignature.s);
@@ -99,14 +92,18 @@ export class Passkey {
       sBytes = sBytes.slice(1);
     }
 
-    const { data: proof } = await axios.post(`${API_URL}/prove_evm`, {
-      r: Array.from(new Uint8Array(rBytes)).reverse(),
-      s: Array.from(new Uint8Array(sBytes)).reverse(),
-      pubkey_x: Array.from(new Uint8Array(x)).reverse(),
-      pubkey_y: Array.from(new Uint8Array(y)).reverse(),
-      msghash: Array.from(new Uint8Array(hashedMessage)).reverse(),
-      proving_key_path: "./keys/proving_key.pk",
-    });
+    const { data: proof } = await this._httpClient.post(
+      `${API_URL}/prove_evm`,
+      {
+        r: Array.from(new Uint8Array(rBytes)).reverse(),
+        s: Array.from(new Uint8Array(sBytes)).reverse(),
+        pubkey_x: Array.from(new Uint8Array(x)).reverse(),
+        pubkey_y: Array.from(new Uint8Array(y)).reverse(),
+        msghash: Array.from(new Uint8Array(hashedMessage)).reverse(),
+        proving_key_path: "./keys/proving_key.pk",
+        chain_id: this._chainId,
+      }
+    );
     return proof;
   }
 }

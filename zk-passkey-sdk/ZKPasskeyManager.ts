@@ -5,8 +5,6 @@ import {
 } from "@simplewebauthn/server";
 import { Passkey } from "./Passkey";
 import { startRegistration } from "@simplewebauthn/browser";
-import { decodeFirst } from "./utils";
-import axios from "axios";
 
 interface ZKPasskeyManagerArgs {
   apiKey: string;
@@ -48,16 +46,12 @@ export class ZKPasskeyManager {
       supportedAlgorithmIDs: [-7],
     });
 
-    const { id } = startRegistrationResponse;
-    const { credentialID, credentialPublicKey, counter } =
-      verificationResponse.registrationInfo!;
+    const { credentialPublicKey } = verificationResponse.registrationInfo!;
 
-    const publicKey = decodeFirst<any>(credentialPublicKey);
-
-    return this.fromPublicKey(publicKey);
+    return this.fromPublicKey(credentialPublicKey);
   }
 
-  public fromPublicKey(publicKey: string): Passkey {
+  public fromPublicKey(publicKey: Uint8Array): Passkey {
     return new Passkey({
       apiKey: this._apiKey,
       chainId: this._chainId,
