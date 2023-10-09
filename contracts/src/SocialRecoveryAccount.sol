@@ -12,12 +12,11 @@ import "./verifier/IVerifier.sol";
  * 3. A recovery group member calls startRecover() to start the recovery process
  * 4. The recovery group members call finishRecover() with their proofs
  * 5. The account is recovered by setting the public key to the new public key
- * 
+ *
  * Note: The recovery process can be ended by the account owner by calling endRecovery(),
  * this is to prevent a hostile takeover from the recovery group
  */
 contract SocialRecoveryAccount is P256Account {
-
     // Contract variables
     IVerifier public verifier;
     address[] recoveryGroup;
@@ -36,7 +35,12 @@ contract SocialRecoveryAccount is P256Account {
      * @param _recoveryGroup The list of addresses that have the ability to recover the account
      * @param _threshold The number of signatures from the recovery group required to recover the account
      */
-    constructor(IEntryPoint _newEntryPoint, IVerifier _verifier, address[] memory _recoveryGroup, uint256 _threshold) P256Account(_newEntryPoint) {
+    constructor(
+        IEntryPoint _newEntryPoint,
+        IVerifier _verifier,
+        address[] memory _recoveryGroup,
+        uint256 _threshold
+    ) P256Account(_newEntryPoint) {
         require(_recoveryGroup.length >= threshold, "Threshold too high");
         verifier = _verifier;
         recoveryGroup = _recoveryGroup;
@@ -44,11 +48,15 @@ contract SocialRecoveryAccount is P256Account {
     }
 
     /**
-     * @dev Sets the recovery group and threshold for the account. This should be called upon account initialization.
+     * @dev Sets the recovery group and threshold for the account.
+     * This should be called upon account initialization.
      * @param _recoveryGroup The list of addresses that have the ability to recover the account
      * @param _threshold The number of signatures from the recovery group required to recover the account
      */
-    function setRecoveryGroup(address[] memory _recoveryGroup, uint256 _threshold) public {
+    function setRecoveryGroup(
+        address[] memory _recoveryGroup,
+        uint256 _threshold
+    ) public {
         _requireFromEntryPoint();
         require(_recoveryGroup.length >= threshold, "Threshold too high");
         recoveryGroup = _recoveryGroup;
@@ -61,10 +69,13 @@ contract SocialRecoveryAccount is P256Account {
      * @param _publicKey The public key of the account
      */
     function startRecover(bytes calldata _publicKey) external {
-        require(block.timestamp > challengePeriodEndTime, "Recovery period ended");
+        require(
+            block.timestamp > challengePeriodEndTime,
+            "Recovery period ended"
+        );
         bool isRecoveryGroupMember = false;
-        for(uint256 i = 0; i < recoveryGroup.length; i++) {
-            if(recoveryGroup[i] == msg.sender) {
+        for (uint256 i = 0; i < recoveryGroup.length; i++) {
+            if (recoveryGroup[i] == msg.sender) {
                 isRecoveryGroupMember = true;
                 break;
             }
@@ -79,10 +90,19 @@ contract SocialRecoveryAccount is P256Account {
      * @param proofs The list of proofs from the recovery group members.
      */
     function finishRecover(bytes[] memory proofs) external {
-        require(block.timestamp > challengePeriodEndTime, "Recovery period ended");
+        require(
+            block.timestamp > challengePeriodEndTime,
+            "Recovery period ended"
+        );
         uint256 successfulSignatures = 0;
         for (uint256 i = 0; i < recoveryGroup.length; i++) {
-            if(verifier.verifyPasskeySignature(recoveryGroup[i], proofs[i], challenge)) {
+            if (
+                verifier.verifyPasskeySignature(
+                    recoveryGroup[i],
+                    proofs[i],
+                    challenge
+                )
+            ) {
                 successfulSignatures++;
             }
         }
@@ -94,7 +114,7 @@ contract SocialRecoveryAccount is P256Account {
      * @dev This is to prevent a hostile takeover of the account by recovery group members.
      * The contract owner can call this method to end the recovery process.
      */
-    function endRecovery() external{
+    function endRecovery() external {
         _requireFromEntryPoint();
         challengePeriodEndTime = type(uint256).max;
     }
