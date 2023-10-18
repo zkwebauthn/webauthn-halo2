@@ -42,6 +42,22 @@ const encoder = new cborx.Encoder({
   tagUint8Array: false,
 });
 
+/**
+ * Decode from a Base64URL-encoded string to an ArrayBuffer. Best used when converting a
+ * credential ID from a JSON string to an ArrayBuffer, like in allowCredentials or
+ * excludeCredentials.
+ *
+ * @param buffer Value to decode from base64
+ * @param to (optional) The decoding to use, in case it's desirable to decode from base64 instead
+ */
+export function toBuffer(
+  base64urlString: string,
+  from: "base64" | "base64url" = "base64url"
+): Uint8Array {
+  const _buffer = base64.toArrayBuffer(base64urlString, from === "base64url");
+  return new Uint8Array(_buffer);
+}
+
 export function decodeFirst<Type>(input: Uint8Array): Type {
   const decoded = encoder.decodeMultiple(input) as undefined | Type[];
 
@@ -181,7 +197,6 @@ export default function Home() {
         authenticationResponse.response.signature,
         true
       );
-      const parsed = parseAuthenticatorData(new Uint8Array(authenticatorData));
 
       const hashedClientData = await window.crypto.subtle.digest(
         "SHA-256",
@@ -224,7 +239,6 @@ export default function Home() {
       const x = publicKey.get(-2);
       const y = publicKey.get(-3);
       const n = publicKey.get(-1);
-      console.log({ x, y, crv, alg });
 
       const keyData = {
         kty: "EC",
@@ -268,7 +282,7 @@ export default function Home() {
       );
       console.log({ result, updatedSignature });
 
-      const response = await verifyAuthenticationResponse({
+      const verifyResponse = await verifyAuthenticationResponse({
         response: authenticationResponse,
         expectedChallenge: "YXNkZg",
         expectedOrigin: window.location.origin,
@@ -281,7 +295,11 @@ export default function Home() {
           counter: authenticator.counter,
         },
       });
-      console.log({ response });
+      console.log("AUTH", {
+        authenticationOptions,
+        authenticationResponse,
+        verifyResponse,
+      });
       // Inputs need to be little-endian
       setStage(TransactionStage.CreatingProof);
       const { data: proof } = await axios.post(`${API_URL}/prove_evm`, {
@@ -466,6 +484,16 @@ export default function Home() {
         expectedOrigin: window.location.origin,
         expectedChallenge: generatedRegistrationOptions.challenge,
         supportedAlgorithmIDs: [-7],
+      });
+      console.log("REGISTER", {
+        generatedRegistrationOptions,
+        startRegistrationResponse,
+        verificationResponse,
+        authDataParsed: parseAuthenticatorData(
+          decodeFirst<any>(
+            toBuffer(startRegistrationResponse.response.attestationObject)
+          ).get("authData")
+        ),
       });
       setResponse(verificationResponse);
       if (!verificationResponse.registrationInfo) {
