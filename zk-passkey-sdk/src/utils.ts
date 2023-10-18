@@ -1,4 +1,10 @@
-import * as cborx from "cbor-x";
+import base64 from "@hexagon/base64";
+import { Encoder } from "cbor-x";
+
+const encoder = new Encoder({
+  mapsAsObjects: false,
+  tagUint8Array: false,
+});
 
 export function decodeFirst<Type>(input: Uint8Array): Type {
   const decoded = encoder.decodeMultiple(input) as undefined | Type[];
@@ -18,6 +24,14 @@ export function decodeFirst<Type>(input: Uint8Array): Type {
   return first;
 }
 
+export function toBuffer(
+  base64urlString: string,
+  from: "base64" | "base64url" = "base64url"
+): Uint8Array {
+  const _buffer = base64.toArrayBuffer(base64urlString, from === "base64url");
+  return new Uint8Array(_buffer);
+}
+
 export function shouldRemoveLeadingZero(bytes: Uint8Array): boolean {
   return bytes[0] === 0x0 && (bytes[1] & (1 << 7)) !== 0;
 }
@@ -25,11 +39,6 @@ export function shouldRemoveLeadingZero(bytes: Uint8Array): boolean {
 function toDataView(array: Uint8Array): DataView {
   return new DataView(array.buffer, array.byteOffset, array.length);
 }
-
-const encoder = new cborx.Encoder({
-  mapsAsObjects: false,
-  tagUint8Array: false,
-});
 
 export function parseAuthenticatorData(authData: Uint8Array) {
   if (authData.byteLength < 37) {

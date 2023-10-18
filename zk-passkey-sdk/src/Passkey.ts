@@ -1,6 +1,5 @@
 import base64 from "@hexagon/base64";
 import { startAuthentication } from "@simplewebauthn/browser";
-import { generateAuthenticationOptions } from "@simplewebauthn/server";
 import {
   concatUint8Arrays,
   decodeFirst,
@@ -38,13 +37,10 @@ export class Passkey {
   }
 
   public async signRecoveryChallenge(expectedChallenge: string) {
-    const authenticationOptions = await generateAuthenticationOptions({
-      rpID: window.location.hostname,
+    const authenticationResponse = await startAuthentication({
+      rpId: window.location.hostname,
       challenge: expectedChallenge,
     });
-    const authenticationResponse = await startAuthentication(
-      authenticationOptions
-    );
     const clientDataJSON = base64.toArrayBuffer(
       authenticationResponse.response.clientDataJSON,
       true

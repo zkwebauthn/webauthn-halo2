@@ -1,0 +1,8 @@
+node_modules/
+.env
+dist
+.rts2*
+yarn-error.log
+.DS_STORE
+dist/
+.eslintcache

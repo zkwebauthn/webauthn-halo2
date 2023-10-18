@@ -1,11 +1,13 @@
 {
-  "name": "knownothing",
-  "version": "1.0.0",
+  "name": "@knownothing/browser",
+  "version": "0.1.0",
   "description": "A TypeScript SDK for zero-knowledge authentication.",
   "license": "MIT",
   "scripts": {
-    "build": "tsc"
+    "build": "rm -rf dist && tsc"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "devDependencies": {
     "@types/node": "^20.8.0",
     "typescript": "^5.2.2"
@@ -15,8 +17,8 @@
     "@peculiar/asn1-ecc": "^2.3.6",
     "@peculiar/asn1-schema": "^2.3.6",
     "@simplewebauthn/browser": "^8.2.1",
-    "@simplewebauthn/server": "^8.2.0",
     "axios": "^1.5.1",
-    "cbor-x": "^1.5.4"
+    "cbor-x": "1.4.1",
+    "esbuild": "^0.19.5"
   }
 }

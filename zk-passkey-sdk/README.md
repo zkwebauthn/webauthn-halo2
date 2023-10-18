@@ -3,16 +3,16 @@
 Using yarn
 
 ```sh
-yarn add knownothing
+yarn add @knownothing/browser
 ```
 
 Using npm
 
 ```sh
-npm install --save knownothing
+npm install --save @knownothing/browser
 ```
 
-## Usage
+##
 
 Typescript:
 
@@ -25,14 +25,13 @@ const zkPasskeyManager = new ZKPasskeyManager({
 });
 // Signs the WebAuthn challenge and generates a proof
 const passkey = await zkPasskeyManager.registerNewPasskey({
-  rpId: window.location.hostname,
-  challenge: randomBytes(),
+  challenge: "my-expected-challenge-here",
 });
-console.log(passkey.publicKey); // save the public key in your application's DB
+console.log(passkey.publicKey); // save the public key in your application's DB, browser storage, or smart contract
 
 /** Recover their account */
-const passkey = zkPasskeyManager.fromPublicKey(publicKey); // from public key stored in application's DB
-const proof = await passkey.signRecoveryChallenge();
+const passkey = zkPasskeyManager.fromPublicKey(publicKey);
+const proof = await passkey.signRecoveryChallenge("my-expected-challenge-here");
 // Submit proof and expectedChallenge to social recovery wallet function
 // ...
 ```
