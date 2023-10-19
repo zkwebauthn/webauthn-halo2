@@ -19,7 +19,6 @@ import "./callback/TokenCallbackHandler.sol";
 contract P256Account is Initializable, SimpleAccount {
     using ECDSA for bytes32;
 
-    address public verifier;
     IEntryPoint public _entryPoint;
     bytes public publicKey;
     address public snarkVerifier;
@@ -46,7 +45,7 @@ contract P256Account is Initializable, SimpleAccount {
         return _entryPoint;
     }
 
-    function setPublicKey(bytes calldata _publicKey) external {
+    function setPublicKey(bytes memory _publicKey) public {
         _requireFromEntryPoint();
         publicKey = _publicKey;
     }
