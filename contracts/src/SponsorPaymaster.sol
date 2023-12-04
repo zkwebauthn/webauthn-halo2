@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.12;
 
-import "./core/BasePaymaster.sol";
+import "./erc-4337/core/BasePaymaster.sol";
 
 /**
  * Paymaster that pays for everything, given the user is authorized.

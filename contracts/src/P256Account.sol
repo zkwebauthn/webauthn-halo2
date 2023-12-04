@@ -5,13 +5,13 @@ pragma solidity ^0.8.12;
 /* solhint-disable no-inline-assembly */
 /* solhint-disable reason-string */
 
-import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
-import "openzeppelin-contracts/contracts/proxy/utils/Initializable.sol";
-import "openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
-import "./SimpleAccount.sol";
-import "./core/BaseAccount.sol";
-import "./callback/TokenCallbackHandler.sol";
+import "./erc-4337/SimpleAccount.sol";
+import "./erc-4337/core/BaseAccount.sol";
+import "./erc-4337/callback/TokenCallbackHandler.sol";
 
 /**
  * Account that validates P-256 signature for UserOperations.

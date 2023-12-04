@@ -2,11 +2,11 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/Counter.sol";
-import "../src/core/EntryPoint.sol";
+import "../test/Counter.sol";
+import "../src/erc-4337/core/EntryPoint.sol";
 import "../src/P256Account.sol";
 import "../src/P256AccountFactory.sol";
-import {UserOperation} from "../src/interfaces/UserOperation.sol";
+import {UserOperation} from "../src/erc-4337/interfaces/UserOperation.sol";
 import "../src/SponsorPaymaster.sol";
 
 /**
