@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/Counter.sol";
+import "../test/Counter.sol";
 import "../src/erc-4337/core/EntryPoint.sol";
 import "../src/P256Account.sol";
 import "../src/P256AccountFactory.sol";

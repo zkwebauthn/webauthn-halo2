@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Script.sol";
 import "../src/P256AccountFactory.sol";
 import "../src/P256Account.sol";
-import "../src/Counter.sol";
+import "../test/Counter.sol";
 import "../src/SponsorPaymaster.sol";
 
 contract DeployAccountFactory is Script {
