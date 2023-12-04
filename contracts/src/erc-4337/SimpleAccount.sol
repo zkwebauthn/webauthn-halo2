@@ -11,8 +11,8 @@ import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 
-import "./erc-4337/core/BaseAccount.sol";
-import "./erc-4337/callback/TokenCallbackHandler.sol";
+import "./core/BaseAccount.sol";
+import "./callback/TokenCallbackHandler.sol";
 
 /**
   * minimal account.
