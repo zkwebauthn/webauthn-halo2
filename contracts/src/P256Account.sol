@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 import "./SimpleAccount.sol";
 import "./core/BaseAccount.sol";
-import "./callback/TokenCallbackHandler.sol";
+import "./erc-4337/callback/TokenCallbackHandler.sol";
 
 /**
  * Account that validates P-256 signature for UserOperations.
